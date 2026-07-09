@@ -29,10 +29,13 @@ import {
   orderBy,
   limit,
   onSnapshot,
+  getDocs,
   addDoc,
   updateDoc,
   deleteDoc,
+  increment,
   serverTimestamp,
+  Timestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -64,10 +67,13 @@ export {
   orderBy,
   limit,
   onSnapshot,
+  getDocs,
   addDoc,
   updateDoc,
   deleteDoc,
+  increment,
   serverTimestamp,
+  Timestamp,
 };
 
 // ------------------------------------------------------------

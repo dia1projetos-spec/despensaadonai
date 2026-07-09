@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Despensa Adonai — Panel</title>
+<link rel="stylesheet" href="css/variables.css" />
+<link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+<div class="app">
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar">
+    <div class="sidebar__logo">
+      <img src="img/logo-despensa-adonai.png" alt="" />
+      <span>Adonai</span>
+    </div>
+
+    <nav>
+      <button class="nav-item is-active" data-view="caja">🧾 Caja</button>
+      <button class="nav-item" data-view="productos">📦 Productos</button>
+      <button class="nav-item" data-view="clientes">👥 Clientes</button>
+      <button class="nav-item" data-view="resumen">💰 Resumen</button>
+      <button class="nav-item" data-view="rankings">📊 Rankings</button>
+      <button class="nav-item" data-view="notificaciones">🔔 Notificaciones
+        <span class="nav-item__badge" id="notif-badge">0</span>
+      </button>
+      <button class="nav-item" data-view="config">⚙️ Configuración</button>
+    </nav>
+
+    <div class="sidebar__footer">
+      <button class="btn-logout" id="btn-logout">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <main class="main">
+
+    <!-- ---------- CAJA ---------- -->
+    <section class="view is-active" data-view="caja">
+      <div class="topbar">
+        <div><h2>Caja</h2><p class="topbar__sub">Registrá una venta nueva</p></div>
+      </div>
+
+      <div class="caja-grid">
+        <div class="panel">
+          <div class="field">
+            <label>Buscar producto</label>
+            <input type="text" id="caja-buscar-producto" placeholder="Escribí el nombre del producto..." autocomplete="off" />
+            <div class="caja-search-results" id="caja-resultados" style="display:none;"></div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Producto</th><th>Precio</th><th>Cant.</th><th>Subtotal</th><th></th></tr></thead>
+              <tbody id="carrito-body">
+                <tr><td colspan="5" class="empty-state">Todavía no agregaste productos</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="field">
+            <label>Cliente</label>
+            <select id="caja-cliente">
+              <option value="">Sin identificar</option>
+            </select>
+          </div>
+
+          <div class="cart-summary-row"><span>Subtotal</span><span id="resumen-subtotal" class="mono">$0.00</span></div>
+          <div class="cart-summary-row"><span>+IVA</span><span id="resumen-iva" class="mono">$0.00</span></div>
+          <div class="cart-summary-row total"><span>Total</span><span id="resumen-total" class="mono">$0.00</span></div>
+
+          <div id="caja-familiar-aviso" style="display:none; margin: var(--space-3) 0; padding: 10px; background: var(--color-accent); color: var(--color-primary-dark); border-radius: var(--radius-sm); font-size: var(--fs-sm); font-weight: 600;">
+            Cliente familiar — esta venta no se cobra, pero queda registrada como retiro familiar.
+          </div>
+
+          <div style="margin-top: var(--space-4);">
+            <label>Forma de pago</label>
+            <div class="pago-options" id="pago-options">
+              <button type="button" data-pago="efectivo" class="is-active">Efectivo</button>
+              <button type="button" data-pago="transferencia">Transferencia</button>
+              <button type="button" data-pago="fiado">Fiado</button>
+            </div>
+          </div>
+
+          <div id="pago-efectivo-campos">
+            <div class="field">
+              <label>Recibiste</label>
+              <input type="number" id="caja-monto-recibido" min="0" step="0.01" placeholder="0.00" />
+            </div>
+            <div class="cart-summary-row"><span>Vuelto</span><span id="resumen-vuelto" class="mono">$0.00</span></div>
+          </div>
+
+          <button class="btn btn-primary" id="btn-finalizar-venta" style="width:100%; margin-top: var(--space-4); justify-content:center;">Finalizar venta</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- PRODUCTOS ---------- -->
+    <section class="view" data-view="productos">
+      <div class="topbar">
+        <div><h2>Productos</h2><p class="topbar__sub">Stock, precios e IVA por producto</p></div>
+        <button class="btn btn-primary" id="btn-nuevo-producto">+ Nuevo producto</button>
+      </div>
+
+      <div class="panel">
+        <div class="toolbar">
+          <input type="text" class="search" id="buscar-producto-lista" placeholder="🔎 Buscar producto..." />
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th></th><th>Producto</th><th>Precio base</th><th>+IVA</th><th>Precio final</th><th>Stock</th><th></th></tr></thead>
+            <tbody id="productos-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- CLIENTES ---------- -->
+    <section class="view" data-view="clientes">
+      <div class="topbar">
+        <div><h2>Clientes</h2><p class="topbar__sub">Comunes y familiares</p></div>
+        <button class="btn btn-primary" id="btn-nuevo-cliente">+ Nuevo cliente</button>
+      </div>
+
+      <div class="panel">
+        <div class="toolbar">
+          <input type="text" class="search" id="buscar-cliente-lista" placeholder="🔎 Buscar cliente..." />
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nombre</th><th>Tipo</th><th>Teléfono</th><th></th></tr></thead>
+            <tbody id="clientes-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- RESUMEN ---------- -->
+    <section class="view" data-view="resumen">
+      <div class="topbar">
+        <div><h2>Resumen financiero</h2><p class="topbar__sub" id="resumen-mes-actual"></p></div>
+        <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
+        <button class="btn btn-primary no-print" id="btn-cerrar-mes">Cerrar mes actual</button>
+      </div>
+
+      <div class="cards-row">
+        <div class="stat-card"><div class="stat-card__label">Total en caja</div><div class="stat-card__value" id="stat-caja">$0.00</div></div>
+        <div class="stat-card stat-card--accent"><div class="stat-card__label">Retiro familiar</div><div class="stat-card__value" id="stat-familiar">$0.00</div></div>
+        <div class="stat-card stat-card--danger"><div class="stat-card__label">Fiado abierto</div><div class="stat-card__value" id="stat-fiado">$0.00</div></div>
+      </div>
+
+      <div class="panel">
+        <div class="toolbar no-print">
+          <h3 style="font-family: var(--font-display); font-size: var(--fs-lg);">Ventas fiadas pendientes</h3>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Fecha</th><th>Cliente</th><th>Total</th><th></th></tr></thead>
+            <tbody id="fiado-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel no-print">
+        <h3 style="font-family: var(--font-display); font-size: var(--fs-lg); margin-bottom: var(--space-4);">Historiales mensuales</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Mes</th><th>Caja</th><th>Familiar</th><th>Fiado abierto</th><th></th></tr></thead>
+            <tbody id="historial-mensual-body"><tr><td colspan="5" class="empty-state">Sin historiales cerrados todavía</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- RANKINGS ---------- -->
+    <section class="view" data-view="rankings">
+      <div class="topbar"><div><h2>Rankings</h2><p class="topbar__sub">Stock bajo y más vendidos</p></div></div>
+
+      <div class="caja-grid">
+        <div class="panel">
+          <h3 style="font-family: var(--font-display); font-size: var(--fs-lg); margin-bottom: var(--space-3);">📉 Menor stock primero</h3>
+          <div class="table-wrap"><table><thead><tr><th>Producto</th><th>Stock</th></tr></thead><tbody id="ranking-stock-body"></tbody></table></div>
+        </div>
+        <div class="panel">
+          <h3 style="font-family: var(--font-display); font-size: var(--fs-lg); margin-bottom: var(--space-3);">🔥 Más vendidos</h3>
+          <div class="table-wrap"><table><thead><tr><th>Producto</th><th>Vendidos</th></tr></thead><tbody id="ranking-vendidos-body"></tbody></table></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- NOTIFICACIONES ---------- -->
+    <section class="view" data-view="notificaciones">
+      <div class="topbar"><div><h2>Notificaciones</h2><p class="topbar__sub">Avisos de stock bajo</p></div></div>
+      <div class="panel" id="notificaciones-panel">
+        <div class="empty-state">No hay notificaciones nuevas</div>
+      </div>
+    </section>
+
+    <!-- ---------- CONFIGURACIÓN ---------- -->
+    <section class="view" data-view="config">
+      <div class="topbar"><div><h2>Configuración</h2><p class="topbar__sub">IVA, logo y fondo del login</p></div></div>
+
+      <div class="panel">
+        <h3 style="font-family: var(--font-display); font-size: var(--fs-lg); margin-bottom: var(--space-3);">IVA general</h3>
+        <p style="color: var(--color-ink-soft); font-size: var(--fs-sm); margin-bottom: var(--space-3);">Valor por defecto sugerido al crear un producto nuevo (opcional, se puede cambiar por producto).</p>
+        <div class="field" style="max-width:220px;">
+          <label>Porcentaje (%)</label>
+          <input type="number" id="config-iva-global" min="0" step="0.01" placeholder="Ej: 21" />
+        </div>
+        <button class="btn btn-primary" id="btn-guardar-iva">Guardar</button>
+      </div>
+
+      <div class="panel">
+        <h3 style="font-family: var(--font-display); font-size: var(--fs-lg); margin-bottom: var(--space-3);">Marca (login)</h3>
+        <div class="field">
+          <label>Logo (imagen)</label>
+          <input type="file" id="config-logo-file" accept="image/*" />
+        </div>
+        <div class="field">
+          <label>Fondo del login (imagen o video)</label>
+          <input type="file" id="config-fondo-file" accept="image/*,video/mp4" />
+        </div>
+        <button class="btn btn-primary" id="btn-guardar-branding">Guardar marca</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============ MODAL: producto ============ -->
+<div class="modal-overlay" id="modal-producto">
+  <div class="modal modal--wide">
+    <h3 id="modal-producto-titulo">Nuevo producto</h3>
+    <input type="hidden" id="producto-id" />
+    <div class="field">
+      <label>Nombre</label>
+      <input type="text" id="producto-nombre" />
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Precio base</label>
+        <input type="number" id="producto-precio" min="0" step="0.01" />
+      </div>
+      <div class="field">
+        <label>Stock</label>
+        <input type="number" id="producto-stock" min="0" step="1" />
+      </div>
+    </div>
+    <div class="field">
+      <label>+IVA (%) — opcional</label>
+      <input type="number" id="producto-iva" min="0" step="0.01" placeholder="Dejar vacío si no aplica" />
+    </div>
+    <div class="field">
+      <label>Foto del producto</label>
+      <input type="file" id="producto-foto" accept="image/*" />
+      <img id="producto-foto-preview" style="display:none; margin-top:8px; width:80px; height:80px; object-fit:cover; border-radius:8px;" />
+    </div>
+    <div class="modal__actions">
+      <button class="btn btn-ghost" data-close-modal>Cancelar</button>
+      <button class="btn btn-primary" id="btn-guardar-producto">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: cliente ============ -->
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal">
+    <h3 id="modal-cliente-titulo">Nuevo cliente</h3>
+    <input type="hidden" id="cliente-id" />
+    <div class="field">
+      <label>Nombre</label>
+      <input type="text" id="cliente-nombre" />
+    </div>
+    <div class="field">
+      <label>Teléfono (opcional)</label>
+      <input type="tel" id="cliente-telefono" />
+    </div>
+    <div class="field">
+      <label>Tipo de cliente</label>
+      <select id="cliente-tipo">
+        <option value="comun">Común</option>
+        <option value="familiar">Familiar (no paga)</option>
+      </select>
+    </div>
+    <div class="modal__actions">
+      <button class="btn btn-ghost" data-close-modal>Cancelar</button>
+      <button class="btn btn-primary" id="btn-guardar-cliente">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: historial de cliente ============ -->
+<div class="modal-overlay" id="modal-historial">
+  <div class="modal modal--wide">
+    <h3 id="modal-historial-titulo">Historial de compras</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Fecha</th><th>Items</th><th>Total</th><th>Pago</th></tr></thead>
+        <tbody id="historial-cliente-body"></tbody>
+      </table>
+    </div>
+    <div class="modal__actions">
+      <button class="btn btn-ghost" data-close-modal>Cerrar</button>
+      <button class="btn btn-accent" onclick="window.print()">🖨️ Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>

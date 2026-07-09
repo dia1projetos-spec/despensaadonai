@@ -1,0 +1,196 @@
+import { db, doc, addDoc, updateDoc, collection, increment } from "./firebase-config.js";
+import { store, onProductosChange, onClientesChange, precioFinalProducto } from "./store.js";
+import { formatoDinero, mostrarToast, escapeHtml } from "./utils.js";
+import { registrarEventoStock } from "./notificaciones.js";
+
+let carrito = []; // { productoId, nombre, precioUnit, cantidad, stockDisponible }
+let formaPago = "efectivo";
+let clienteSeleccionado = null;
+
+export function initCaja() {
+  const inputBuscar = document.getElementById("caja-buscar-producto");
+  const resultados = document.getElementById("caja-resultados");
+  const selectCliente = document.getElementById("caja-cliente");
+  const carritoBody = document.getElementById("carrito-body");
+  const pagoOptions = document.getElementById("pago-options");
+  const montoRecibido = document.getElementById("caja-monto-recibido");
+  const btnFinalizar = document.getElementById("btn-finalizar-venta");
+  const avisoFamiliar = document.getElementById("caja-familiar-aviso");
+  const camposEfectivo = document.getElementById("pago-efectivo-campos");
+
+  onProductosChange(() => {}); // productos ya están en store
+  onClientesChange((clientes) => {
+    selectCliente.innerHTML = `<option value="">Sin identificar</option>` +
+      clientes.map((c) => `<option value="${c.id}" data-tipo="${c.tipo}">${escapeHtml(c.nombre)}${c.tipo === "familiar" ? " (familiar)" : ""}</option>`).join("");
+  });
+
+  inputBuscar.addEventListener("input", () => {
+    const texto = inputBuscar.value.trim().toLowerCase();
+    if (!texto) { resultados.style.display = "none"; return; }
+    const encontrados = store.productos.filter((p) => p.nombre.toLowerCase().includes(texto)).slice(0, 8);
+    if (!encontrados.length) {
+      resultados.innerHTML = `<div class="caja-search-item">Sin resultados</div>`;
+    } else {
+      resultados.innerHTML = encontrados.map((p) => `
+        <div class="caja-search-item" data-add="${p.id}">
+          <span>${escapeHtml(p.nombre)} ${p.stock <= 2 ? "⚠️" : ""}</span>
+          <span class="mono">${formatoDinero(precioFinalProducto(p))} · stock ${p.stock}</span>
+        </div>`).join("");
+    }
+    resultados.style.display = "block";
+  });
+
+  resultados.addEventListener("click", (e) => {
+    const item = e.target.closest("[data-add]");
+    if (!item) return;
+    agregarAlCarrito(item.dataset.add);
+    inputBuscar.value = "";
+    resultados.style.display = "none";
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest("#caja-buscar-producto") && !e.target.closest("#caja-resultados")) {
+      resultados.style.display = "none";
+    }
+  });
+
+  selectCliente.addEventListener("change", () => {
+    const opt = selectCliente.options[selectCliente.selectedIndex];
+    clienteSeleccionado = selectCliente.value ? { id: selectCliente.value, nombre: opt.textContent, tipo: opt.dataset.tipo } : null;
+    avisoFamiliar.style.display = clienteSeleccionado?.tipo === "familiar" ? "block" : "none";
+    renderResumen();
+  });
+
+  pagoOptions.addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    formaPago = btn.dataset.pago;
+    [...pagoOptions.children].forEach((b) => b.classList.toggle("is-active", b === btn));
+    camposEfectivo.style.display = formaPago === "efectivo" ? "block" : "none";
+    renderResumen();
+  });
+
+  montoRecibido.addEventListener("input", renderResumen);
+
+  carritoBody.addEventListener("click", (e) => {
+    const delBtn = e.target.closest("[data-quitar]");
+    if (delBtn) {
+      carrito = carrito.filter((i) => i.productoId !== delBtn.dataset.quitar);
+      renderCarrito();
+    }
+  });
+
+  carritoBody.addEventListener("change", (e) => {
+    if (e.target.classList.contains("cart-item__qty")) {
+      const item = carrito.find((i) => i.productoId === e.target.dataset.id);
+      let qty = parseInt(e.target.value) || 1;
+      if (qty > item.stockDisponible) {
+        qty = item.stockDisponible;
+        mostrarToast("No hay más stock disponible de ese producto", true);
+      }
+      if (qty < 1) qty = 1;
+      item.cantidad = qty;
+      renderCarrito();
+    }
+  });
+
+  btnFinalizar.addEventListener("click", finalizarVenta);
+
+  function agregarAlCarrito(productoId) {
+    const p = store.productos.find((x) => x.id === productoId);
+    if (!p) return;
+    if (p.stock <= 0) { mostrarToast("Ese producto no tiene stock", true); return; }
+    const existente = carrito.find((i) => i.productoId === productoId);
+    if (existente) {
+      if (existente.cantidad < p.stock) existente.cantidad++;
+      else mostrarToast("No hay más stock disponible", true);
+    } else {
+      carrito.push({ productoId, nombre: p.nombre, precioUnit: precioFinalProducto(p), cantidad: 1, stockDisponible: p.stock });
+    }
+    renderCarrito();
+  }
+
+  function renderCarrito() {
+    if (!carrito.length) {
+      carritoBody.innerHTML = `<tr><td colspan="5" class="empty-state">Todavía no agregaste productos</td></tr>`;
+    } else {
+      carritoBody.innerHTML = carrito.map((i) => `
+        <tr>
+          <td>${escapeHtml(i.nombre)}</td>
+          <td class="mono">${formatoDinero(i.precioUnit)}</td>
+          <td><input type="number" class="cart-item__qty" data-id="${i.productoId}" value="${i.cantidad}" min="1" max="${i.stockDisponible}" /></td>
+          <td class="mono">${formatoDinero(i.precioUnit * i.cantidad)}</td>
+          <td><button class="btn btn-danger btn-sm" data-quitar="${i.productoId}">✕</button></td>
+        </tr>`).join("");
+    }
+    renderResumen();
+  }
+
+  function calcularTotales() {
+    const total = carrito.reduce((acc, i) => acc + i.precioUnit * i.cantidad, 0);
+    return { total };
+  }
+
+  function renderResumen() {
+    const { total } = calcularTotales();
+    const esFamiliar = clienteSeleccionado?.tipo === "familiar";
+    document.getElementById("resumen-subtotal").textContent = formatoDinero(total);
+    document.getElementById("resumen-iva").textContent = "incluido";
+    document.getElementById("resumen-total").textContent = esFamiliar ? "$0.00 (familiar)" : formatoDinero(total);
+
+    if (formaPago === "efectivo" && !esFamiliar) {
+      const recibido = parseFloat(montoRecibido.value) || 0;
+      const vuelto = recibido - total;
+      document.getElementById("resumen-vuelto").textContent = formatoDinero(vuelto > 0 ? vuelto : 0);
+    } else {
+      document.getElementById("resumen-vuelto").textContent = formatoDinero(0);
+    }
+  }
+
+  async function finalizarVenta() {
+    if (!carrito.length) { mostrarToast("Agregá al menos un producto", true); return; }
+    const { total } = calcularTotales();
+    const esFamiliar = clienteSeleccionado?.tipo === "familiar";
+
+    btnFinalizar.disabled = true;
+    try {
+      const venta = {
+        clienteId: clienteSeleccionado?.id || null,
+        clienteNombre: clienteSeleccionado?.nombre || "Sin identificar",
+        esFamiliar,
+        items: carrito.map((i) => ({ productoId: i.productoId, nombre: i.nombre, precio: i.precioUnit, cantidad: i.cantidad })),
+        subtotal: total,
+        total: esFamiliar ? 0 : total,
+        valorReal: total, // valor de mercadería aunque sea familiar (para el resumen)
+        formaPago: esFamiliar ? "familiar" : formaPago,
+        pagado: esFamiliar ? true : formaPago !== "fiado",
+        createdAt: new Date(),
+      };
+
+      await addDoc(collection(db, "ventas"), venta);
+
+      // Actualizar stock y disparar notificación si corresponde
+      for (const item of carrito) {
+        const producto = store.productos.find((p) => p.id === item.productoId);
+        const nuevoStock = Math.max(0, (producto?.stock ?? 0) - item.cantidad);
+        await updateDoc(doc(db, "productos", item.productoId), { stock: increment(-item.cantidad), vendidos: increment(item.cantidad) });
+        if (nuevoStock <= 2) await registrarEventoStock(item.productoId, item.nombre, nuevoStock);
+      }
+
+      mostrarToast("Venta registrada ✔");
+      carrito = [];
+      clienteSeleccionado = null;
+      selectCliente.value = "";
+      avisoFamiliar.style.display = "none";
+      montoRecibido.value = "";
+      renderCarrito();
+    } catch (err) {
+      console.error(err);
+      mostrarToast("Error al registrar la venta", true);
+    } finally {
+      btnFinalizar.disabled = false;
+    }
+  }
+
+  renderCarrito();
+}
