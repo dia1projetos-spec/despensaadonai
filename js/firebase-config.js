@@ -79,6 +79,6 @@ export {
 //   Signing mode: "Unsigned"  →  copiar el nombre del preset abajo.
 // ------------------------------------------------------------
 export const CLOUDINARY_CONFIG = {
-  cloudName: "PON_ACA_TU_CLOUD_NAME", // visible en el dashboard de Cloudinary
-  uploadPreset: "PON_ACA_TU_UPLOAD_PRESET_UNSIGNED",
+  cloudName: "jwsmxzrc",
+  uploadPreset: "Despensa Adonai", // confirmar se é exatamente esse o nome salvo no Cloudinary
 };
