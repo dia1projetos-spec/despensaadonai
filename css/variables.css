@@ -1,0 +1,61 @@
+/* ============================================================
+   DESPENSA ADONAI — Design tokens
+   Paleta extraída diretamente do logo (fundo creme, marca
+   espresso escuro, folhas em tom terracota/oliva).
+   ============================================================ */
+
+:root {
+  /* --- Cores base (do logo) --- */
+  --color-bg: #f7ede2;          /* creme de fundo do logo */
+  --color-surface: #fffcf8;     /* cards, painéis (branco quente) */
+  --color-surface-2: #efe1d2;   /* superfícies secundárias */
+  --color-ink: #33210f;         /* marrom espresso — texto principal, ícone da cesta */
+  --color-ink-soft: #7d6a57;    /* texto secundário */
+  --color-border: #e6d8c7;
+
+  --color-primary: #33210f;     /* espresso — botões, header, ações principais */
+  --color-primary-dark: #201306;
+  --color-primary-light: #efe1d2;
+
+  --color-accent: #a98a6c;      /* terracota/oliva das folhas — destaques */
+  --color-accent-dark: #8b6b4c;
+
+  --color-success: #4a7d4f;
+  --color-danger: #b3452f;
+  --color-danger-light: #fbeae5;
+  --color-warning: #a98a6c;
+
+  /* --- Tipografia ---
+     Display: Fraunces (serifa contemporânea, elegante como o wordmark "ADONAI")
+     Rótulos/eyebrow: Inter com tracking largo (imita "D E S P E N S A" do logo)
+     Corpo: Inter
+     Números/preços: IBM Plex Mono (dígitos tabulares) */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.25rem;
+  --fs-xl: 1.75rem;
+  --fs-2xl: 2.5rem;
+
+  /* --- Espaçamento --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+
+  --shadow-card: 0 8px 30px rgba(51, 33, 15, 0.14);
+  --shadow-soft: 0 2px 8px rgba(51, 33, 15, 0.08);
+
+  --transition: 180ms ease;
+}

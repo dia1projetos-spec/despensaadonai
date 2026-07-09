@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Despensa Adonai — Iniciar sesión</title>
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/login.css" />
+</head>
+<body>
+
+  <div class="login-bg">
+    <div class="login-bg__stripes" id="bg-stripes"></div>
+    <div id="bg-media"></div>
+    <div class="login-bg__vignette"></div>
+  </div>
+
+  <main class="login-card" role="main">
+    <div class="login-card__logo" id="logo-wrap">
+      <img src="img/logo-despensa-adonai.png" alt="Despensa Adonai" />
+    </div>
+
+    <p class="login-card__eyebrow">Despensa</p>
+    <h1>Adonai</h1>
+    <div class="login-card__rule"></div>
+
+    <div class="login-error" id="login-error" role="alert"></div>
+
+    <form id="login-form" novalidate>
+      <div class="field">
+        <label for="email">Correo electrónico</label>
+        <div class="field__input-wrap">
+          <input type="email" id="email" name="email" autocomplete="username" required />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="password">Contraseña</label>
+        <div class="field__input-wrap">
+          <input type="password" id="password" name="password" autocomplete="current-password" required />
+          <button type="button" class="field__toggle" id="toggle-password" aria-label="Mostrar contraseña">Mostrar</button>
+        </div>
+      </div>
+
+      <label class="login-remember">
+        <input type="checkbox" id="remember" checked />
+        Recordarme en este dispositivo
+      </label>
+
+      <button type="submit" class="btn" id="login-submit">
+        <span class="spinner" aria-hidden="true"></span>
+        <span class="btn__label">Ingresar</span>
+      </button>
+    </form>
+
+    <p class="login-footer">Despensa Adonai · Sistema de caja</p>
+  </main>
+
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>
