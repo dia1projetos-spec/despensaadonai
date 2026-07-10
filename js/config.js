@@ -1,6 +1,6 @@
-import { db, doc, getDoc, setDoc } from "./firebase-config.js";
-import { subirACloudinary } from "./cloudinary.js";
-import { mostrarToast } from "./utils.js";
+import { db, doc, getDoc, setDoc } from "./firebase-config.js?v=2";
+import { subirACloudinary } from "./cloudinary.js?v=2";
+import { mostrarToast } from "./utils.js?v=2";
 
 export function initConfig() {
   const inputIva = document.getElementById("config-iva-global");

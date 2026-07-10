@@ -1,5 +1,5 @@
-import { db, collection, query, where, orderBy, getDocs, onSnapshot, doc, updateDoc, deleteDoc, addDoc, Timestamp } from "./firebase-config.js";
-import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js";
+import { db, collection, query, where, orderBy, getDocs, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, Timestamp } from "./firebase-config.js?v=2";
+import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=2";
 
 function inicioDeMes() {
   const d = new Date();
@@ -8,6 +8,11 @@ function inicioDeMes() {
 
 let ventasDelMes = [];
 let retirosDelMes = [];
+let ajusteManual = { monto: 0, motivo: "" };
+
+function claveDelMes() {
+  return new Date().toISOString().slice(0, 7); // YYYY-MM
+}
 
 export function initResumen() {
   const btnCerrar = document.getElementById("btn-cerrar-mes");
@@ -49,6 +54,46 @@ export function initResumen() {
       mostrarToast("No se pudieron cargar los retiros: " + err.message, true);
     }
   );
+
+  // Ajuste manual de caja (un documento por mes, se puede editar o eliminar).
+  const refAjuste = doc(db, "ajustesCaja", claveDelMes());
+  onSnapshot(refAjuste, (snap) => {
+    ajusteManual = snap.exists() ? snap.data() : { monto: 0, motivo: "" };
+    const texto = document.getElementById("ajuste-actual-texto");
+    texto.textContent = ajusteManual.monto
+      ? `Ajuste actual: ${formatoDinero(ajusteManual.monto)} — ${ajusteManual.motivo || "sin motivo"}`
+      : "Sin ajuste manual aplicado este mes.";
+    document.getElementById("ajuste-monto").value = ajusteManual.monto || "";
+    document.getElementById("ajuste-motivo").value = ajusteManual.motivo || "";
+    renderResumen();
+  }, (err) => {
+    console.error("Error cargando ajuste de caja:", err);
+  });
+
+  document.getElementById("btn-guardar-ajuste").addEventListener("click", async () => {
+    const monto = parseFloat(document.getElementById("ajuste-monto").value) || 0;
+    const motivo = document.getElementById("ajuste-motivo").value.trim();
+    try {
+      await setDoc(refAjuste, { monto, motivo, updatedAt: new Date() });
+      mostrarToast("Ajuste de caja guardado");
+    } catch (err) {
+      console.error(err);
+      mostrarToast("Error al guardar el ajuste", true);
+    }
+  });
+
+  document.getElementById("btn-borrar-ajuste").addEventListener("click", async () => {
+    if (!confirm("¿Eliminar el ajuste manual de este mes?")) return;
+    try {
+      await deleteDoc(refAjuste);
+      document.getElementById("ajuste-monto").value = "";
+      document.getElementById("ajuste-motivo").value = "";
+      mostrarToast("Ajuste eliminado");
+    } catch (err) {
+      console.error(err);
+      mostrarToast("Error al eliminar el ajuste", true);
+    }
+  });
 
   btnNuevoRetiro.addEventListener("click", () => {
     document.getElementById("retiro-nombre").value = "";
@@ -146,7 +191,7 @@ export function initResumen() {
     });
 
     const totalRetiros = retirosDelMes.reduce((acc, r) => acc + (r.monto || 0), 0);
-    const totalDisponible = totalCaja - totalRetiros;
+    const totalDisponible = totalCaja - totalRetiros + (ajusteManual.monto || 0);
 
     return { totalCaja, totalFamiliar, totalFiadoAbierto, totalRetiros, totalDisponible, fiadosPendientes };
   }

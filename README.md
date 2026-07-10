@@ -45,6 +45,16 @@ despensa-adonai/
 - **Notificaciones**: se genera un aviso nuevo cada vez que un producto baja a 2, 1 o 0 unidades. Al marcar como leída desaparece; si el producto se repone y vuelve a bajar, avisa de nuevo.
 - **Configuración**: IVA sugerido general, y cambio de logo/fondo del login (imagen o video) sin tocar código.
 
+## Sobre cache del navegador (importante)
+
+Todos los archivos `.js` y `.css` ahora se cargan con un parámetro `?v=2` al final
+(por ejemplo `admin.js?v=2`). Esto existe para evitar que el navegador de la
+computadora de la caja siga usando una versión vieja y cacheada del sistema
+después de que yo corrija algo. **La próxima vez que reciban un ZIP con
+correcciones, si algo "no cambia" a pesar de haber subido los archivos nuevos,
+probá cambiar el número (`?v=2` → `?v=3`) en `index.html` y `admin.html`**, o
+simplemente hacer un refresh forzado (Ctrl+Shift+R / Cmd+Shift+R).
+
 ## Limitación importante (leer)
 
 El borrado de compras con más de 6 meses y el cierre de mes son procesos que corren **cuando alguien abre el sistema** (no hay un servidor corriendo 24/7 sin que nadie entre). Para la mayoría de los kioscos esto no es un problema porque el sistema se abre todos los días. Si en algún momento querés que esto pase automáticamente incluso sin que nadie abra el panel (por ejemplo a la medianoche del día 1 de cada mes), hay que agregar **Firebase Cloud Functions + Cloud Scheduler** — es un paso más avanzado que puedo armar después si lo necesitás.

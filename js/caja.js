@@ -1,7 +1,7 @@
-import { db, doc, addDoc, updateDoc, collection, increment } from "./firebase-config.js";
-import { store, onProductosChange, onClientesChange, precioFinalProducto } from "./store.js";
-import { formatoDinero, mostrarToast, escapeHtml } from "./utils.js";
-import { registrarEventoStock } from "./notificaciones.js";
+import { db, doc, addDoc, updateDoc, collection, increment } from "./firebase-config.js?v=2";
+import { store, onProductosChange, onClientesChange, precioFinalProducto } from "./store.js?v=2";
+import { formatoDinero, mostrarToast, escapeHtml } from "./utils.js?v=2";
+import { registrarEventoStock } from "./notificaciones.js?v=2";
 
 let carrito = []; // { productoId, nombre, precioUnit, cantidad, stockDisponible }
 let formaPago = "efectivo";

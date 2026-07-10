@@ -8,7 +8,7 @@ import {
   browserSessionPersistence,
   signInWithEmailAndPassword,
   onAuthStateChanged,
-} from "./firebase-config.js";
+} from "./firebase-config.js?v=2";
 
 const form = document.getElementById("login-form");
 const emailInput = document.getElementById("email");
