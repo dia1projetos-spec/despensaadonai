@@ -24,20 +24,38 @@ export function initCaja() {
       clientes.map((c) => `<option value="${c.id}" data-tipo="${c.tipo}">${escapeHtml(c.nombre)}${c.tipo === "familiar" ? " (familiar)" : ""}</option>`).join("");
   });
 
-  inputBuscar.addEventListener("input", () => {
-    const texto = inputBuscar.value.trim().toLowerCase();
-    if (!texto) { resultados.style.display = "none"; return; }
-    const encontrados = store.productos.filter((p) => p.nombre.toLowerCase().includes(texto)).slice(0, 8);
-    if (!encontrados.length) {
+  function renderResultados(lista) {
+    if (!lista.length) {
       resultados.innerHTML = `<div class="caja-search-item">Sin resultados</div>`;
     } else {
-      resultados.innerHTML = encontrados.map((p) => `
+      resultados.innerHTML = lista.map((p) => `
         <div class="caja-search-item" data-add="${p.id}">
           <span>${escapeHtml(p.nombre)} ${p.stock <= 2 ? "⚠️" : ""}</span>
           <span class="mono">${formatoDinero(precioFinalProducto(p))} · stock ${p.stock}</span>
         </div>`).join("");
     }
     resultados.style.display = "block";
+  }
+
+  inputBuscar.addEventListener("focus", () => {
+    if (!store.productos.length) {
+      resultados.innerHTML = `<div class="caja-search-item">Todavía no hay productos cargados. Cargalos en la sección "Productos".</div>`;
+      resultados.style.display = "block";
+      return;
+    }
+    const texto = inputBuscar.value.trim().toLowerCase();
+    const lista = texto
+      ? store.productos.filter((p) => p.nombre.toLowerCase().includes(texto)).slice(0, 8)
+      : store.productos.slice(0, 20);
+    renderResultados(lista);
+  });
+
+  inputBuscar.addEventListener("input", () => {
+    const texto = inputBuscar.value.trim().toLowerCase();
+    const lista = texto
+      ? store.productos.filter((p) => p.nombre.toLowerCase().includes(texto)).slice(0, 8)
+      : store.productos.slice(0, 20);
+    renderResultados(lista);
   });
 
   resultados.addEventListener("click", (e) => {

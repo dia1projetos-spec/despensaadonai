@@ -43,6 +43,11 @@ export function initNotificaciones() {
           <button class="btn btn-ghost btn-sm" data-leer="${n.id}">Marcar leída</button>
         </div>`;
     }).join("");
+  }, (err) => {
+    console.error("Error cargando notificaciones:", err);
+    if (err.code === "failed-precondition") {
+      panel.innerHTML = `<div class="empty-state">Firebase necesita crear un índice para esto. Abrí la consola del navegador (F12) y hacé click en el link azul que aparece ahí.</div>`;
+    }
   });
 
   panel.addEventListener("click", async (e) => {

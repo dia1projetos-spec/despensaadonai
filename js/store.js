@@ -1,4 +1,5 @@
 import { db, collection, onSnapshot, orderBy, query } from "./firebase-config.js";
+import { mostrarToast } from "./utils.js";
 
 export const store = {
   productos: [],
@@ -12,16 +13,30 @@ export function onClientesChange(cb) { listeners.clientes.push(cb); if (store.cl
 
 export function iniciarStore() {
   const qProductos = query(collection(db, "productos"), orderBy("nombre"));
-  onSnapshot(qProductos, (snap) => {
-    store.productos = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    listeners.productos.forEach((cb) => cb(store.productos));
-  });
+  onSnapshot(
+    qProductos,
+    (snap) => {
+      store.productos = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      listeners.productos.forEach((cb) => cb(store.productos));
+    },
+    (err) => {
+      console.error("Error cargando productos:", err);
+      mostrarToast("No se pudieron cargar los productos: " + err.message, true);
+    }
+  );
 
   const qClientes = query(collection(db, "clientes"), orderBy("nombre"));
-  onSnapshot(qClientes, (snap) => {
-    store.clientes = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    listeners.clientes.forEach((cb) => cb(store.clientes));
-  });
+  onSnapshot(
+    qClientes,
+    (snap) => {
+      store.clientes = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      listeners.clientes.forEach((cb) => cb(store.clientes));
+    },
+    (err) => {
+      console.error("Error cargando clientes:", err);
+      mostrarToast("No se pudieron cargar los clientes: " + err.message, true);
+    }
+  );
 }
 
 export function precioFinalProducto(p) {
