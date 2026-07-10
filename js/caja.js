@@ -37,7 +37,7 @@ export function initCaja() {
     resultados.style.display = "block";
   }
 
-  inputBuscar.addEventListener("focus", () => {
+  function mostrarListaCompleta() {
     if (!store.productos.length) {
       resultados.innerHTML = `<div class="caja-search-item">Todavía no hay productos cargados. Cargalos en la sección "Productos".</div>`;
       resultados.style.display = "block";
@@ -48,15 +48,11 @@ export function initCaja() {
       ? store.productos.filter((p) => p.nombre.toLowerCase().includes(texto)).slice(0, 8)
       : store.productos.slice(0, 20);
     renderResultados(lista);
-  });
+  }
 
-  inputBuscar.addEventListener("input", () => {
-    const texto = inputBuscar.value.trim().toLowerCase();
-    const lista = texto
-      ? store.productos.filter((p) => p.nombre.toLowerCase().includes(texto)).slice(0, 8)
-      : store.productos.slice(0, 20);
-    renderResultados(lista);
-  });
+  inputBuscar.addEventListener("focus", mostrarListaCompleta);
+  inputBuscar.addEventListener("click", mostrarListaCompleta);
+  inputBuscar.addEventListener("input", mostrarListaCompleta);
 
   resultados.addEventListener("click", (e) => {
     const item = e.target.closest("[data-add]");

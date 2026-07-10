@@ -1,4 +1,4 @@
-import { db, doc, addDoc, updateDoc, deleteDoc, collection, query, where, orderBy, getDocs } from "./firebase-config.js";
+import { db, doc, addDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "./firebase-config.js";
 import { store, onClientesChange } from "./store.js";
 import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js";
 
@@ -106,13 +106,14 @@ export function initClientes() {
     body.innerHTML = `<tr><td colspan="4" class="empty-state">Cargando...</td></tr>`;
     abrirModal("modal-historial");
 
-    const q = query(collection(db, "ventas"), where("clienteId", "==", clienteId), orderBy("createdAt", "desc"));
+    const q = query(collection(db, "ventas"), where("clienteId", "==", clienteId));
     const snap = await getDocs(q);
     if (snap.empty) {
       body.innerHTML = `<tr><td colspan="4" class="empty-state">Sin compras registradas</td></tr>`;
       return;
     }
-    body.innerHTML = snap.docs.map((d) => {
+    const docsOrdenados = [...snap.docs].sort((a, b) => (b.data().createdAt?.toMillis?.() ?? 0) - (a.data().createdAt?.toMillis?.() ?? 0));
+    body.innerHTML = docsOrdenados.map((d) => {
       const v = d.data();
       const items = v.items.map((i) => `${i.cantidad}x ${i.nombre}`).join(", ");
       return `<tr>

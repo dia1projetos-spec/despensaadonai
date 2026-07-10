@@ -1,4 +1,4 @@
-import { db, doc, addDoc, updateDoc, collection, query, where, orderBy, onSnapshot } from "./firebase-config.js";
+import { db, doc, addDoc, updateDoc, collection, query, where, onSnapshot } from "./firebase-config.js";
 import { formatoFecha, escapeHtml } from "./utils.js";
 
 /**
@@ -20,9 +20,13 @@ export function initNotificaciones() {
   const panel = document.getElementById("notificaciones-panel");
   const badge = document.getElementById("notif-badge");
 
-  const q = query(collection(db, "notificaciones"), where("leida", "==", false), orderBy("createdAt", "desc"));
+  // Solo filtramos por "leida" (un único campo, no necesita índice compuesto)
+  // y ordenamos por fecha directamente acá en el navegador.
+  const q = query(collection(db, "notificaciones"), where("leida", "==", false));
   onSnapshot(q, (snap) => {
-    const notifs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    const notifs = snap.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
 
     badge.textContent = notifs.length;
     badge.classList.toggle("is-visible", notifs.length > 0);
@@ -45,9 +49,7 @@ export function initNotificaciones() {
     }).join("");
   }, (err) => {
     console.error("Error cargando notificaciones:", err);
-    if (err.code === "failed-precondition") {
-      panel.innerHTML = `<div class="empty-state">Firebase necesita crear un índice para esto. Abrí la consola del navegador (F12) y hacé click en el link azul que aparece ahí.</div>`;
-    }
+    panel.innerHTML = `<div class="empty-state">Error al cargar notificaciones: ${err.message}</div>`;
   });
 
   panel.addEventListener("click", async (e) => {
