@@ -1,5 +1,5 @@
-import { db, collection, query, where, orderBy, getDocs, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, Timestamp } from "./firebase-config.js?v=2";
-import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=2";
+import { db, collection, query, where, orderBy, getDocs, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField, addDoc, Timestamp } from "./firebase-config.js?v=3";
+import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=3";
 
 function inicioDeMes() {
   const d = new Date();
@@ -71,7 +71,7 @@ export function initResumen() {
     const monto = parseFloat(nuevoValor);
     if (isNaN(monto)) { mostrarToast("Ingresá un número válido", true); return; }
     try {
-      await setDoc(refAjuste, { totalOverride: monto, updatedAt: new Date() });
+      await setDoc(refAjuste, { totalOverride: monto, updatedAt: new Date() }, { merge: true });
       mostrarToast("Total en caja actualizado");
     } catch (err) {
       console.error(err);
@@ -82,8 +82,34 @@ export function initResumen() {
   document.getElementById("btn-borrar-caja").addEventListener("click", async () => {
     if (!confirm("¿Restablecer el total en caja al valor calculado automáticamente por las ventas?")) return;
     try {
-      await deleteDoc(refAjuste);
+      await setDoc(refAjuste, { totalOverride: deleteField() }, { merge: true });
       mostrarToast("Total en caja restablecido");
+    } catch (err) {
+      console.error(err);
+      mostrarToast("Error al restablecer", true);
+    }
+  });
+
+  document.getElementById("btn-editar-familiar").addEventListener("click", async () => {
+    const actual = ajusteManual && ajusteManual.familiarOverride != null ? ajusteManual.familiarOverride : calcularTotales().totalFamiliar;
+    const nuevoValor = prompt("Ingresá el nuevo valor de \"Retiro familiar\":", actual);
+    if (nuevoValor === null) return;
+    const monto = parseFloat(nuevoValor);
+    if (isNaN(monto)) { mostrarToast("Ingresá un número válido", true); return; }
+    try {
+      await setDoc(refAjuste, { familiarOverride: monto, updatedAt: new Date() }, { merge: true });
+      mostrarToast("Retiro familiar actualizado");
+    } catch (err) {
+      console.error(err);
+      mostrarToast("Error al guardar", true);
+    }
+  });
+
+  document.getElementById("btn-borrar-familiar").addEventListener("click", async () => {
+    if (!confirm("¿Restablecer el retiro familiar al valor calculado automáticamente por las ventas?")) return;
+    try {
+      await setDoc(refAjuste, { familiarOverride: deleteField() }, { merge: true });
+      mostrarToast("Retiro familiar restablecido");
     } catch (err) {
       console.error(err);
       mostrarToast("Error al restablecer", true);
@@ -185,11 +211,12 @@ export function initResumen() {
       }
     });
 
-    const totalCaja = ajusteManual ? ajusteManual.totalOverride : totalCajaCalculado;
+    const totalCaja = ajusteManual && ajusteManual.totalOverride != null ? ajusteManual.totalOverride : totalCajaCalculado;
+    const totalFamiliarFinal = ajusteManual && ajusteManual.familiarOverride != null ? ajusteManual.familiarOverride : totalFamiliar;
     const totalRetiros = retirosDelMes.reduce((acc, r) => acc + (r.monto || 0), 0);
     const totalDisponible = totalCaja - totalRetiros;
 
-    return { totalCaja, totalFamiliar, totalFiadoAbierto, totalRetiros, totalDisponible, fiadosPendientes };
+    return { totalCaja, totalFamiliar: totalFamiliarFinal, totalFiadoAbierto, totalRetiros, totalDisponible, fiadosPendientes };
   }
 
   function renderResumen() {
