@@ -8,7 +8,7 @@ function inicioDeMes() {
 
 let ventasDelMes = [];
 let retirosDelMes = [];
-let ajusteManual = { monto: 0, motivo: "" };
+let ajusteManual = null;
 
 function claveDelMes() {
   return new Date().toISOString().slice(0, 7); // YYYY-MM
@@ -55,43 +55,38 @@ export function initResumen() {
     }
   );
 
-  // Ajuste manual de caja (un documento por mes, se puede editar o eliminar).
+  // Edición directa del "Total en caja" (sobrescribe el cálculo automático hasta que se restablezca).
   const refAjuste = doc(db, "ajustesCaja", claveDelMes());
   onSnapshot(refAjuste, (snap) => {
-    ajusteManual = snap.exists() ? snap.data() : { monto: 0, motivo: "" };
-    const texto = document.getElementById("ajuste-actual-texto");
-    texto.textContent = ajusteManual.monto
-      ? `Ajuste actual: ${formatoDinero(ajusteManual.monto)} — ${ajusteManual.motivo || "sin motivo"}`
-      : "Sin ajuste manual aplicado este mes.";
-    document.getElementById("ajuste-monto").value = ajusteManual.monto || "";
-    document.getElementById("ajuste-motivo").value = ajusteManual.motivo || "";
+    ajusteManual = snap.exists() ? snap.data() : null;
     renderResumen();
   }, (err) => {
-    console.error("Error cargando ajuste de caja:", err);
+    console.error("Error cargando el total de caja editado:", err);
   });
 
-  document.getElementById("btn-guardar-ajuste").addEventListener("click", async () => {
-    const monto = parseFloat(document.getElementById("ajuste-monto").value) || 0;
-    const motivo = document.getElementById("ajuste-motivo").value.trim();
+  document.getElementById("btn-editar-caja").addEventListener("click", async () => {
+    const actual = ajusteManual ? ajusteManual.totalOverride : calcularTotales().totalCaja;
+    const nuevoValor = prompt("Ingresá el nuevo valor de \"Total en caja\":", actual);
+    if (nuevoValor === null) return; // canceló
+    const monto = parseFloat(nuevoValor);
+    if (isNaN(monto)) { mostrarToast("Ingresá un número válido", true); return; }
     try {
-      await setDoc(refAjuste, { monto, motivo, updatedAt: new Date() });
-      mostrarToast("Ajuste de caja guardado");
+      await setDoc(refAjuste, { totalOverride: monto, updatedAt: new Date() });
+      mostrarToast("Total en caja actualizado");
     } catch (err) {
       console.error(err);
-      mostrarToast("Error al guardar el ajuste", true);
+      mostrarToast("Error al guardar", true);
     }
   });
 
-  document.getElementById("btn-borrar-ajuste").addEventListener("click", async () => {
-    if (!confirm("¿Eliminar el ajuste manual de este mes?")) return;
+  document.getElementById("btn-borrar-caja").addEventListener("click", async () => {
+    if (!confirm("¿Restablecer el total en caja al valor calculado automáticamente por las ventas?")) return;
     try {
       await deleteDoc(refAjuste);
-      document.getElementById("ajuste-monto").value = "";
-      document.getElementById("ajuste-motivo").value = "";
-      mostrarToast("Ajuste eliminado");
+      mostrarToast("Total en caja restablecido");
     } catch (err) {
       console.error(err);
-      mostrarToast("Error al eliminar el ajuste", true);
+      mostrarToast("Error al restablecer", true);
     }
   });
 
@@ -172,7 +167,7 @@ export function initResumen() {
   });
 
   function calcularTotales() {
-    let totalCaja = 0, totalFamiliar = 0, totalFiadoAbierto = 0;
+    let totalCajaCalculado = 0, totalFamiliar = 0, totalFiadoAbierto = 0;
     const fiadosPendientes = [];
 
     ventasDelMes.forEach((v) => {
@@ -183,15 +178,16 @@ export function initResumen() {
           totalFiadoAbierto += v.total || 0;
           fiadosPendientes.push(v);
         } else {
-          totalCaja += v.total || 0;
+          totalCajaCalculado += v.total || 0;
         }
       } else {
-        totalCaja += v.total || 0;
+        totalCajaCalculado += v.total || 0;
       }
     });
 
+    const totalCaja = ajusteManual ? ajusteManual.totalOverride : totalCajaCalculado;
     const totalRetiros = retirosDelMes.reduce((acc, r) => acc + (r.monto || 0), 0);
-    const totalDisponible = totalCaja - totalRetiros + (ajusteManual.monto || 0);
+    const totalDisponible = totalCaja - totalRetiros;
 
     return { totalCaja, totalFamiliar, totalFiadoAbierto, totalRetiros, totalDisponible, fiadosPendientes };
   }

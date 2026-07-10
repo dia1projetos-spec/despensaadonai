@@ -148,27 +148,18 @@
       </div>
 
       <div class="cards-row">
-        <div class="stat-card"><div class="stat-card__label">Total en caja</div><div class="stat-card__value" id="stat-caja">$0.00</div></div>
+        <div class="stat-card">
+          <div class="stat-card__label">Total en caja</div>
+          <div class="stat-card__value" id="stat-caja">$0.00</div>
+          <div style="margin-top:8px; display:flex; gap:6px;">
+            <button class="btn btn-ghost btn-sm no-print" id="btn-editar-caja">✏️ Editar</button>
+            <button class="btn btn-danger btn-sm no-print" id="btn-borrar-caja">🗑️ Restablecer</button>
+          </div>
+        </div>
         <div class="stat-card"><div class="stat-card__label">Retiros del mes</div><div class="stat-card__value small" id="stat-retiros">$0.00</div></div>
         <div class="stat-card"><div class="stat-card__label">Caja disponible</div><div class="stat-card__value small" id="stat-disponible">$0.00</div></div>
         <div class="stat-card stat-card--accent"><div class="stat-card__label">Retiro familiar</div><div class="stat-card__value" id="stat-familiar">$0.00</div></div>
         <div class="stat-card stat-card--danger"><div class="stat-card__label">Fiado abierto</div><div class="stat-card__value" id="stat-fiado">$0.00</div></div>
-      </div>
-
-      <div class="panel">
-        <div class="toolbar no-print" style="align-items:flex-end;">
-          <div class="field" style="max-width:200px; margin-bottom:0;">
-            <label>Ajuste manual de caja</label>
-            <input type="number" id="ajuste-monto" step="0.01" placeholder="Ej: -500 o 500" />
-          </div>
-          <div class="field" style="flex:1; margin-bottom:0;">
-            <label>Motivo del ajuste</label>
-            <input type="text" id="ajuste-motivo" placeholder="Ej: corrección de conteo, prueba, etc." />
-          </div>
-          <button class="btn btn-primary" id="btn-guardar-ajuste">Guardar</button>
-          <button class="btn btn-danger" id="btn-borrar-ajuste">Eliminar ajuste</button>
-        </div>
-        <p style="color: var(--color-ink-soft); font-size: var(--fs-sm);" id="ajuste-actual-texto">Sin ajuste manual aplicado este mes.</p>
       </div>
 
       <div class="panel">
