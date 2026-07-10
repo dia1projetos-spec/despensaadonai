@@ -30,7 +30,10 @@ export function initCaja() {
     } else {
       resultados.innerHTML = lista.map((p) => `
         <div class="caja-search-item" data-add="${p.id}">
-          <span>${escapeHtml(p.nombre)} ${p.stock <= 2 ? "⚠️" : ""}</span>
+          <span style="display:flex; align-items:center; gap:8px;">
+            ${p.fotoUrl ? `<img src="${p.fotoUrl}" class="prod-thumb" style="width:28px;height:28px;" />` : `<span class="prod-thumb" style="width:28px;height:28px;display:inline-block;"></span>`}
+            ${escapeHtml(p.nombre)} ${p.stock <= 2 ? "⚠️" : ""}
+          </span>
           <span class="mono">${formatoDinero(precioFinalProducto(p))} · stock ${p.stock}</span>
         </div>`).join("");
     }
@@ -119,7 +122,7 @@ export function initCaja() {
       if (existente.cantidad < p.stock) existente.cantidad++;
       else mostrarToast("No hay más stock disponible", true);
     } else {
-      carrito.push({ productoId, nombre: p.nombre, precioUnit: precioFinalProducto(p), cantidad: 1, stockDisponible: p.stock });
+      carrito.push({ productoId, nombre: p.nombre, fotoUrl: p.fotoUrl || null, precioUnit: precioFinalProducto(p), cantidad: 1, stockDisponible: p.stock });
     }
     renderCarrito();
   }
@@ -130,7 +133,10 @@ export function initCaja() {
     } else {
       carritoBody.innerHTML = carrito.map((i) => `
         <tr>
-          <td>${escapeHtml(i.nombre)}</td>
+          <td style="display:flex; align-items:center; gap:8px;">
+            ${i.fotoUrl ? `<img src="${i.fotoUrl}" class="prod-thumb" style="width:28px;height:28px;" />` : ""}
+            ${escapeHtml(i.nombre)}
+          </td>
           <td class="mono">${formatoDinero(i.precioUnit)}</td>
           <td><input type="number" class="cart-item__qty" data-id="${i.productoId}" value="${i.cantidad}" min="1" max="${i.stockDisponible}" /></td>
           <td class="mono">${formatoDinero(i.precioUnit * i.cantidad)}</td>

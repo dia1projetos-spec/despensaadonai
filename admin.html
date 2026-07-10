@@ -149,8 +149,23 @@
 
       <div class="cards-row">
         <div class="stat-card"><div class="stat-card__label">Total en caja</div><div class="stat-card__value" id="stat-caja">$0.00</div></div>
+        <div class="stat-card"><div class="stat-card__label">Retiros del mes</div><div class="stat-card__value small" id="stat-retiros">$0.00</div></div>
+        <div class="stat-card"><div class="stat-card__label">Caja disponible</div><div class="stat-card__value small" id="stat-disponible">$0.00</div></div>
         <div class="stat-card stat-card--accent"><div class="stat-card__label">Retiro familiar</div><div class="stat-card__value" id="stat-familiar">$0.00</div></div>
         <div class="stat-card stat-card--danger"><div class="stat-card__label">Fiado abierto</div><div class="stat-card__value" id="stat-fiado">$0.00</div></div>
+      </div>
+
+      <div class="panel">
+        <div class="toolbar no-print">
+          <h3 style="font-family: var(--font-display); font-size: var(--fs-lg); flex:1;">Retiros de caja</h3>
+          <button class="btn btn-primary" id="btn-nuevo-retiro">+ Retirar dinero</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Fecha</th><th>Quién retira</th><th>Motivo</th><th class="text-right">Monto</th><th></th></tr></thead>
+            <tbody id="retiros-body"><tr><td colspan="5" class="empty-state">Sin retiros este mes</td></tr></tbody>
+          </table>
+        </div>
       </div>
 
       <div class="panel">
@@ -306,6 +321,29 @@
     <div class="modal__actions">
       <button class="btn btn-ghost" data-close-modal>Cerrar</button>
       <button class="btn btn-accent" onclick="window.print()">🖨️ Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: retiro de caja ============ -->
+<div class="modal-overlay" id="modal-retiro">
+  <div class="modal">
+    <h3>Retirar dinero de caja</h3>
+    <div class="field">
+      <label>¿Quién retira?</label>
+      <input type="text" id="retiro-nombre" placeholder="Tu nombre" />
+    </div>
+    <div class="field">
+      <label>Monto retirado</label>
+      <input type="number" id="retiro-monto" min="0" step="0.01" placeholder="0.00" />
+    </div>
+    <div class="field">
+      <label>Motivo</label>
+      <textarea id="retiro-motivo" rows="3" placeholder="Ej: pago a proveedor, gasto personal, etc."></textarea>
+    </div>
+    <div class="modal__actions">
+      <button class="btn btn-ghost" data-close-modal>Cancelar</button>
+      <button class="btn btn-primary" id="btn-guardar-retiro">Registrar retiro</button>
     </div>
   </div>
 </div>
