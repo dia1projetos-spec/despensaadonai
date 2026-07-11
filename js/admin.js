@@ -1,13 +1,13 @@
-import { auth, db, onAuthStateChanged, signOut, collection, query, where, getDocs, deleteDoc, Timestamp } from "./firebase-config.js?v=5";
-import { iniciarStore } from "./store.js?v=5";
-import { inicializarModales } from "./utils.js?v=5";
-import { initProductos } from "./productos.js?v=5";
-import { initClientes } from "./clientes.js?v=5";
-import { initCaja } from "./caja.js?v=5";
-import { initResumen } from "./resumen.js?v=5";
-import { initRankings } from "./rankings.js?v=5";
-import { initNotificaciones } from "./notificaciones.js?v=5";
-import { initConfig } from "./config.js?v=5";
+import { auth, db, onAuthStateChanged, signOut, collection, query, where, getDocs, deleteDoc, Timestamp } from "./firebase-config.js?v=6";
+import { iniciarStore } from "./store.js?v=6";
+import { inicializarModales } from "./utils.js?v=6";
+import { initProductos } from "./productos.js?v=6";
+import { initClientes } from "./clientes.js?v=6";
+import { initCaja } from "./caja.js?v=6";
+import { initResumen } from "./resumen.js?v=6";
+import { initRankings } from "./rankings.js?v=6";
+import { initNotificaciones } from "./notificaciones.js?v=6";
+import { initConfig } from "./config.js?v=6";
 
 // ---------- Guarda de sesión ----------
 onAuthStateChanged(auth, (user) => {
