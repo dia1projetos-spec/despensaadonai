@@ -1,7 +1,7 @@
-import { db, doc, addDoc, updateDoc, collection, increment } from "./firebase-config.js?v=6";
-import { store, onProductosChange, onClientesChange, precioFinalProducto } from "./store.js?v=6";
-import { formatoDinero, mostrarToast, escapeHtml } from "./utils.js?v=6";
-import { registrarEventoStock } from "./notificaciones.js?v=6";
+import { db, doc, addDoc, updateDoc, collection, increment } from "./firebase-config.js?v=7";
+import { store, onProductosChange, onClientesChange, precioFinalProducto } from "./store.js?v=7";
+import { formatoDinero, mostrarToast, escapeHtml } from "./utils.js?v=7";
+import { registrarEventoStock } from "./notificaciones.js?v=7";
 
 let carrito = []; // { productoId, nombre, precioUnit, cantidad, stockDisponible }
 let formaPago = "efectivo";
@@ -133,14 +133,14 @@ export function initCaja() {
     } else {
       carritoBody.innerHTML = carrito.map((i) => `
         <tr>
-          <td style="display:flex; align-items:center; gap:8px;">
+          <td data-label="Producto" style="display:flex; align-items:center; gap:8px;">
             ${i.fotoUrl ? `<img src="${i.fotoUrl}" class="prod-thumb" style="width:28px;height:28px;" />` : ""}
             ${escapeHtml(i.nombre)}
           </td>
-          <td class="mono">${formatoDinero(i.precioUnit)}</td>
-          <td><input type="number" class="cart-item__qty" data-id="${i.productoId}" value="${i.cantidad}" min="1" max="${i.stockDisponible}" /></td>
-          <td class="mono">${formatoDinero(i.precioUnit * i.cantidad)}</td>
-          <td><button class="btn btn-danger btn-sm" data-quitar="${i.productoId}">✕</button></td>
+          <td data-label="Precio" class="mono">${formatoDinero(i.precioUnit)}</td>
+          <td data-label="Cantidad"><input type="number" class="cart-item__qty" data-id="${i.productoId}" value="${i.cantidad}" min="1" max="${i.stockDisponible}" /></td>
+          <td data-label="Subtotal" class="mono">${formatoDinero(i.precioUnit * i.cantidad)}</td>
+          <td data-label=""><button class="btn btn-danger btn-sm" data-quitar="${i.productoId}">✕</button></td>
         </tr>`).join("");
     }
     renderResumen();

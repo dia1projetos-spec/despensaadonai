@@ -1,5 +1,5 @@
-import { db, collection, query, where, orderBy, getDocs, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField, addDoc, Timestamp } from "./firebase-config.js?v=6";
-import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=6";
+import { db, collection, query, where, orderBy, getDocs, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField, addDoc, Timestamp } from "./firebase-config.js?v=7";
+import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=7";
 
 function inicioDeMes() {
   const d = new Date();
@@ -232,10 +232,10 @@ export function initResumen() {
     } else {
       fiadoBody.innerHTML = fiadosPendientes.map((v) => `
         <tr>
-          <td>${formatoFecha(v.createdAt)}</td>
-          <td>${escapeHtml(v.clienteNombre)}</td>
-          <td class="mono">${formatoDinero(v.total)}</td>
-          <td><button class="btn btn-accent btn-sm" data-pagar="${v.id}">Marcar pagado</button></td>
+          <td data-label="Fecha">${formatoFecha(v.createdAt)}</td>
+          <td data-label="Cliente">${escapeHtml(v.clienteNombre)}</td>
+          <td data-label="Total" class="mono">${formatoDinero(v.total)}</td>
+          <td data-label=""><button class="btn btn-accent btn-sm" data-pagar="${v.id}">Marcar pagado</button></td>
         </tr>`).join("");
     }
 
@@ -244,11 +244,11 @@ export function initResumen() {
     } else {
       retirosBody.innerHTML = retirosDelMes.map((r) => `
         <tr>
-          <td>${formatoFecha(r.createdAt)}</td>
-          <td>${escapeHtml(r.nombre)}</td>
-          <td>${escapeHtml(r.motivo)}</td>
-          <td class="text-right mono">${formatoDinero(r.monto)}</td>
-          <td><button class="btn btn-danger btn-sm" data-del-retiro="${r.id}">Eliminar</button></td>
+          <td data-label="Fecha">${formatoFecha(r.createdAt)}</td>
+          <td data-label="Quién retira">${escapeHtml(r.nombre)}</td>
+          <td data-label="Motivo">${escapeHtml(r.motivo)}</td>
+          <td data-label="Monto" class="text-right mono">${formatoDinero(r.monto)}</td>
+          <td data-label=""><button class="btn btn-danger btn-sm" data-del-retiro="${r.id}">Eliminar</button></td>
         </tr>`).join("");
     }
   }
@@ -264,11 +264,11 @@ export function initResumen() {
     body.innerHTML = snap.docs.map((d) => {
       const r = d.data();
       return `<tr>
-        <td>${escapeHtml(r.mes)}</td>
-        <td class="mono">${formatoDinero(r.totalDisponible ?? r.totalCaja)}</td>
-        <td class="mono">${formatoDinero(r.totalFamiliar)}</td>
-        <td class="mono">${formatoDinero(r.totalFiadoAbierto)}</td>
-        <td>
+        <td data-label="Mes">${escapeHtml(r.mes)}</td>
+        <td data-label="Caja" class="mono">${formatoDinero(r.totalDisponible ?? r.totalCaja)}</td>
+        <td data-label="Familiar" class="mono">${formatoDinero(r.totalFamiliar)}</td>
+        <td data-label="Fiado abierto" class="mono">${formatoDinero(r.totalFiadoAbierto)}</td>
+        <td data-label="">
           <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨️</button>
           <button class="btn btn-danger btn-sm" data-del-mes="${d.id}">Eliminar</button>
         </td>

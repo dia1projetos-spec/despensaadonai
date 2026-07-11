@@ -1,7 +1,7 @@
-import { db, doc, addDoc, updateDoc, deleteDoc, collection } from "./firebase-config.js?v=6";
-import { subirACloudinary } from "./cloudinary.js?v=6";
-import { store, onProductosChange, precioFinalProducto } from "./store.js?v=6";
-import { formatoDinero, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=6";
+import { db, doc, addDoc, updateDoc, deleteDoc, collection } from "./firebase-config.js?v=7";
+import { subirACloudinary } from "./cloudinary.js?v=7";
+import { store, onProductosChange, precioFinalProducto } from "./store.js?v=7";
+import { formatoDinero, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=7";
 
 let fotoTemp = null;
 let filtroTexto = "";
@@ -56,13 +56,13 @@ export function initProductos() {
 
     body.innerHTML = lista.map((p) => `
       <tr>
-        <td>${p.fotoUrl ? `<img src="${p.fotoUrl}" class="prod-thumb" />` : `<div class="prod-thumb"></div>`}</td>
-        <td>${escapeHtml(p.nombre)}</td>
-        <td class="mono">${formatoDinero(p.precio)}</td>
-        <td>${p.ivaPercent != null && p.ivaPercent !== "" ? p.ivaPercent + "%" : "—"}</td>
-        <td class="mono">${formatoDinero(precioFinalProducto(p))}</td>
-        <td>${p.stock <= 2 ? `<span class="pill pill--stock-low">${p.stock}</span>` : p.stock}</td>
-        <td>
+        <td data-label="Foto">${p.fotoUrl ? `<img src="${p.fotoUrl}" class="prod-thumb" />` : `<div class="prod-thumb"></div>`}</td>
+        <td data-label="Producto">${escapeHtml(p.nombre)}</td>
+        <td data-label="Precio base" class="mono">${formatoDinero(p.precio)}</td>
+        <td data-label="+IVA">${p.ivaPercent != null && p.ivaPercent !== "" ? p.ivaPercent + "%" : "—"}</td>
+        <td data-label="Precio final" class="mono">${formatoDinero(precioFinalProducto(p))}</td>
+        <td data-label="Stock">${p.stock <= 2 ? `<span class="pill pill--stock-low">${p.stock}</span>` : p.stock}</td>
+        <td data-label="Acciones">
           <button class="btn btn-ghost btn-sm" data-edit="${p.id}">Editar</button>
           <button class="btn btn-danger btn-sm" data-del="${p.id}">Eliminar</button>
         </td>

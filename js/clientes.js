@@ -1,6 +1,6 @@
-import { db, doc, addDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "./firebase-config.js?v=6";
-import { store, onClientesChange } from "./store.js?v=6";
-import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=6";
+import { db, doc, addDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "./firebase-config.js?v=7";
+import { store, onClientesChange } from "./store.js?v=7";
+import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=7";
 
 let filtroTexto = "";
 
@@ -45,10 +45,10 @@ export function initClientes() {
 
     body.innerHTML = lista.map((c) => `
       <tr>
-        <td>${escapeHtml(c.nombre)}</td>
-        <td><span class="pill pill--${c.tipo}">${c.tipo === "familiar" ? "Familiar" : "Común"}</span></td>
-        <td>${escapeHtml(c.telefono || "—")}</td>
-        <td>
+        <td data-label="Nombre">${escapeHtml(c.nombre)}</td>
+        <td data-label="Tipo"><span class="pill pill--${c.tipo}">${c.tipo === "familiar" ? "Familiar" : "Común"}</span></td>
+        <td data-label="Teléfono">${escapeHtml(c.telefono || "—")}</td>
+        <td data-label="Acciones">
           <button class="btn btn-ghost btn-sm" data-hist="${c.id}" data-nombre="${escapeHtml(c.nombre)}">Historial</button>
           <button class="btn btn-ghost btn-sm" data-edit="${c.id}">Editar</button>
           <button class="btn btn-danger btn-sm" data-del="${c.id}">Eliminar</button>
@@ -117,10 +117,10 @@ export function initClientes() {
       const v = d.data();
       const items = v.items.map((i) => `${i.cantidad}x ${i.nombre}`).join(", ");
       return `<tr>
-        <td>${formatoFecha(v.createdAt)}</td>
-        <td>${escapeHtml(items)}</td>
-        <td class="mono">${formatoDinero(v.total)}</td>
-        <td><span class="pill pill--${v.formaPago}">${v.formaPago}</span></td>
+        <td data-label="Fecha">${formatoFecha(v.createdAt)}</td>
+        <td data-label="Items">${escapeHtml(items)}</td>
+        <td data-label="Total" class="mono">${formatoDinero(v.total)}</td>
+        <td data-label="Pago"><span class="pill pill--${v.formaPago}">${v.formaPago}</span></td>
       </tr>`;
     }).join("");
   }

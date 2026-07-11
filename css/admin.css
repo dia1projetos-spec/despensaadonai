@@ -289,6 +289,51 @@ tr:hover td { background: var(--color-primary-light); }
   .pago-options { flex-direction: column; }
 }
 
+@media (max-width: 640px) {
+  /* Cabecera: el título y el botón de acción se apilan, nunca se cortan */
+  .topbar { flex-direction: column; align-items: stretch; }
+  .topbar > button, .topbar .btn { width: 100%; justify-content: center; }
+
+  /* Toolbars (buscador + botones) también se apilan */
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .toolbar .search { width: 100%; }
+
+  /* Tablas → tarjetas apiladas (nada se corta, no hace falta arrastrar) */
+  .table-wrap { overflow-x: visible; }
+  .table-wrap table, .table-wrap tbody, .table-wrap tr, .table-wrap td { display: block; width: 100%; }
+  .table-wrap thead { display: none; }
+  .table-wrap tr {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-3);
+    padding: var(--space-3);
+    background: var(--color-surface);
+  }
+  .table-wrap td {
+    border: none;
+    padding: 6px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    text-align: right;
+  }
+  .table-wrap td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--color-ink-soft);
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-align: left;
+    flex-shrink: 0;
+  }
+  .table-wrap td:empty,
+  .table-wrap td[data-label=""] { display: none; }
+  .table-wrap td[data-label="Acciones"],
+  .table-wrap td[data-label="Foto"] { justify-content: flex-end; }
+}
+
 /* ---------- Impresión (tickets / resúmenes) ---------- */
 @media print {
   .sidebar, .topbar, .toolbar, .btn, .no-print { display: none !important; }
