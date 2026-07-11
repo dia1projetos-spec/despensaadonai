@@ -4,8 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Despensa Adonai — Panel</title>
-<link rel="stylesheet" href="css/variables.css?v=7" />
-<link rel="stylesheet" href="css/admin.css?v=7" />
+<link rel="stylesheet" href="css/variables.css?v=8" />
+<link rel="stylesheet" href="css/admin.css?v=8" />
 </head>
 <body>
 
@@ -81,7 +81,7 @@
           </div>
 
           <div class="cart-summary-row"><span>Subtotal</span><span id="resumen-subtotal" class="mono">$0.00</span></div>
-          <div class="cart-summary-row"><span>+IVA</span><span id="resumen-iva" class="mono">$0.00</span></div>
+          <div class="cart-summary-row" id="fila-iva-general"><span id="label-iva-general">+IVA general</span><span id="resumen-iva" class="mono">$0.00</span></div>
           <div class="cart-summary-row total"><span>Total</span><span id="resumen-total" class="mono">$0.00</span></div>
 
           <div id="caja-familiar-aviso" style="display:none; margin: var(--space-3) 0; padding: 10px; background: var(--color-accent); color: var(--color-primary-dark); border-radius: var(--radius-sm); font-size: var(--fs-sm); font-weight: 600;">
@@ -375,6 +375,6 @@
 
 <div class="toast" id="toast"></div>
 
-<script type="module" src="js/admin.js?v=7"></script>
+<script type="module" src="js/admin.js?v=8"></script>
 </body>
 </html>

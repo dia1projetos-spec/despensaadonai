@@ -1,5 +1,5 @@
-import { db, doc, addDoc, updateDoc, collection, query, where, onSnapshot } from "./firebase-config.js?v=7";
-import { formatoFecha, escapeHtml } from "./utils.js?v=7";
+import { db, doc, addDoc, updateDoc, collection, query, where, onSnapshot } from "./firebase-config.js?v=8";
+import { formatoFecha, escapeHtml } from "./utils.js?v=8";
 
 /**
  * Se llama cada vez que el stock de un producto cambia a 2, 1 o 0.

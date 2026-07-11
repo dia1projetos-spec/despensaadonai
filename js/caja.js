@@ -1,11 +1,12 @@
-import { db, doc, addDoc, updateDoc, collection, increment } from "./firebase-config.js?v=7";
-import { store, onProductosChange, onClientesChange, precioFinalProducto } from "./store.js?v=7";
-import { formatoDinero, mostrarToast, escapeHtml } from "./utils.js?v=7";
-import { registrarEventoStock } from "./notificaciones.js?v=7";
+import { db, doc, addDoc, updateDoc, collection, increment, onSnapshot } from "./firebase-config.js?v=8";
+import { store, onProductosChange, onClientesChange, precioFinalProducto } from "./store.js?v=8";
+import { formatoDinero, mostrarToast, escapeHtml } from "./utils.js?v=8";
+import { registrarEventoStock } from "./notificaciones.js?v=8";
 
 let carrito = []; // { productoId, nombre, precioUnit, cantidad, stockDisponible }
 let formaPago = "efectivo";
 let clienteSeleccionado = null;
+let ivaGlobalPercent = null;
 
 export function initCaja() {
   const inputBuscar = document.getElementById("caja-buscar-producto");
@@ -19,6 +20,21 @@ export function initCaja() {
   const camposEfectivo = document.getElementById("pago-efectivo-campos");
 
   onProductosChange(() => {}); // productos ya están en store
+
+  // Escucha en vivo el +IVA general configurado en "Configuración".
+  // Este IVA se cobra sobre el total de la compra (no reemplaza el +IVA
+  // que ya tenga cada producto individualmente — se suman los dos).
+  onSnapshot(doc(db, "config", "general"), (snap) => {
+    ivaGlobalPercent = snap.exists() ? snap.data().ivaGlobal : null;
+    const label = document.getElementById("label-iva-general");
+    if (ivaGlobalPercent != null && ivaGlobalPercent !== "") {
+      label.textContent = `+IVA general (${ivaGlobalPercent}%)`;
+    } else {
+      label.textContent = "+IVA general";
+    }
+    renderResumen();
+  });
+
   onClientesChange((clientes) => {
     selectCliente.innerHTML = `<option value="">Sin identificar</option>` +
       clientes.map((c) => `<option value="${c.id}" data-tipo="${c.tipo}">${escapeHtml(c.nombre)}${c.tipo === "familiar" ? " (familiar)" : ""}</option>`).join("");
@@ -147,15 +163,17 @@ export function initCaja() {
   }
 
   function calcularTotales() {
-    const total = carrito.reduce((acc, i) => acc + i.precioUnit * i.cantidad, 0);
-    return { total };
+    const subtotal = carrito.reduce((acc, i) => acc + i.precioUnit * i.cantidad, 0);
+    const ivaGlobalMonto = ivaGlobalPercent ? subtotal * (Number(ivaGlobalPercent) / 100) : 0;
+    const total = subtotal + ivaGlobalMonto;
+    return { subtotal, ivaGlobalMonto, total };
   }
 
   function renderResumen() {
-    const { total } = calcularTotales();
+    const { subtotal, ivaGlobalMonto, total } = calcularTotales();
     const esFamiliar = clienteSeleccionado?.tipo === "familiar";
-    document.getElementById("resumen-subtotal").textContent = formatoDinero(total);
-    document.getElementById("resumen-iva").textContent = "incluido";
+    document.getElementById("resumen-subtotal").textContent = formatoDinero(subtotal);
+    document.getElementById("resumen-iva").textContent = formatoDinero(ivaGlobalMonto);
     document.getElementById("resumen-total").textContent = esFamiliar ? "$0.00 (familiar)" : formatoDinero(total);
 
     if (formaPago === "efectivo" && !esFamiliar) {
@@ -169,7 +187,7 @@ export function initCaja() {
 
   async function finalizarVenta() {
     if (!carrito.length) { mostrarToast("Agregá al menos un producto", true); return; }
-    const { total } = calcularTotales();
+    const { subtotal, ivaGlobalMonto, total } = calcularTotales();
     const esFamiliar = clienteSeleccionado?.tipo === "familiar";
 
     btnFinalizar.disabled = true;
@@ -179,7 +197,9 @@ export function initCaja() {
         clienteNombre: clienteSeleccionado?.nombre || "Sin identificar",
         esFamiliar,
         items: carrito.map((i) => ({ productoId: i.productoId, nombre: i.nombre, precio: i.precioUnit, cantidad: i.cantidad })),
-        subtotal: total,
+        subtotal,
+        ivaGlobalPercent: ivaGlobalPercent || null,
+        ivaGlobalMonto,
         total: esFamiliar ? 0 : total,
         valorReal: total, // valor de mercadería aunque sea familiar (para el resumen)
         formaPago: esFamiliar ? "familiar" : formaPago,
