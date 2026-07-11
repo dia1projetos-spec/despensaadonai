@@ -1,5 +1,5 @@
-import { db, collection, query, where, orderBy, getDocs, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField, addDoc, Timestamp } from "./firebase-config.js?v=3";
-import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=3";
+import { db, collection, query, where, orderBy, getDocs, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField, addDoc, Timestamp } from "./firebase-config.js?v=4";
+import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=4";
 
 function inicioDeMes() {
   const d = new Date();
@@ -80,10 +80,10 @@ export function initResumen() {
   });
 
   document.getElementById("btn-borrar-caja").addEventListener("click", async () => {
-    if (!confirm("¿Restablecer el total en caja al valor calculado automáticamente por las ventas?")) return;
+    if (!confirm("¿Poner el total en caja en $0.00?")) return;
     try {
-      await setDoc(refAjuste, { totalOverride: deleteField() }, { merge: true });
-      mostrarToast("Total en caja restablecido");
+      await setDoc(refAjuste, { totalOverride: 0, updatedAt: new Date() }, { merge: true });
+      mostrarToast("Total en caja puesto en $0.00");
     } catch (err) {
       console.error(err);
       mostrarToast("Error al restablecer", true);
@@ -106,10 +106,10 @@ export function initResumen() {
   });
 
   document.getElementById("btn-borrar-familiar").addEventListener("click", async () => {
-    if (!confirm("¿Restablecer el retiro familiar al valor calculado automáticamente por las ventas?")) return;
+    if (!confirm("¿Poner el retiro familiar en $0.00?")) return;
     try {
-      await setDoc(refAjuste, { familiarOverride: deleteField() }, { merge: true });
-      mostrarToast("Retiro familiar restablecido");
+      await setDoc(refAjuste, { familiarOverride: 0, updatedAt: new Date() }, { merge: true });
+      mostrarToast("Retiro familiar puesto en $0.00");
     } catch (err) {
       console.error(err);
       mostrarToast("Error al restablecer", true);
