@@ -1,13 +1,13 @@
-import { auth, db, onAuthStateChanged, signOut, collection, query, where, getDocs, deleteDoc, Timestamp } from "./firebase-config.js?v=4";
-import { iniciarStore } from "./store.js?v=4";
-import { inicializarModales } from "./utils.js?v=4";
-import { initProductos } from "./productos.js?v=4";
-import { initClientes } from "./clientes.js?v=4";
-import { initCaja } from "./caja.js?v=4";
-import { initResumen } from "./resumen.js?v=4";
-import { initRankings } from "./rankings.js?v=4";
-import { initNotificaciones } from "./notificaciones.js?v=4";
-import { initConfig } from "./config.js?v=4";
+import { auth, db, onAuthStateChanged, signOut, collection, query, where, getDocs, deleteDoc, Timestamp } from "./firebase-config.js?v=5";
+import { iniciarStore } from "./store.js?v=5";
+import { inicializarModales } from "./utils.js?v=5";
+import { initProductos } from "./productos.js?v=5";
+import { initClientes } from "./clientes.js?v=5";
+import { initCaja } from "./caja.js?v=5";
+import { initResumen } from "./resumen.js?v=5";
+import { initRankings } from "./rankings.js?v=5";
+import { initNotificaciones } from "./notificaciones.js?v=5";
+import { initConfig } from "./config.js?v=5";
 
 // ---------- Guarda de sesión ----------
 onAuthStateChanged(auth, (user) => {
@@ -35,6 +35,23 @@ function iniciarApp() {
   limpiarVentasViejas();
 }
 
+// ---------- Menú hambúrguer (mobile) ----------
+const sidebar = document.querySelector(".sidebar");
+const overlay = document.getElementById("sidebar-overlay");
+const btnMenuToggle = document.getElementById("btn-menu-toggle");
+
+function abrirMenu() {
+  sidebar.classList.add("is-open");
+  overlay.classList.add("is-visible");
+}
+function cerrarMenu() {
+  sidebar.classList.remove("is-open");
+  overlay.classList.remove("is-visible");
+}
+
+btnMenuToggle.addEventListener("click", abrirMenu);
+overlay.addEventListener("click", cerrarMenu);
+
 // ---------- Navegación entre secciones ----------
 document.querySelectorAll(".nav-item[data-view]").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -42,6 +59,7 @@ document.querySelectorAll(".nav-item[data-view]").forEach((btn) => {
     document.querySelectorAll(".view").forEach((v) => v.classList.remove("is-active"));
     btn.classList.add("is-active");
     document.querySelector(`.view[data-view="${btn.dataset.view}"]`).classList.add("is-active");
+    cerrarMenu(); // en mobile, elegir una sección cierra el menú automáticamente
   });
 });
 

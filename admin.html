@@ -4,10 +4,21 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Despensa Adonai — Panel</title>
-<link rel="stylesheet" href="css/variables.css?v=4" />
-<link rel="stylesheet" href="css/admin.css?v=4" />
+<link rel="stylesheet" href="css/variables.css?v=5" />
+<link rel="stylesheet" href="css/admin.css?v=5" />
 </head>
 <body>
+
+<div class="mobile-topbar">
+  <button class="menu-toggle" id="btn-menu-toggle" aria-label="Abrir menú">☰</button>
+  <div class="mobile-topbar__logo">
+    <img src="img/logo-despensa-adonai.png" alt="" />
+    <span>Adonai</span>
+  </div>
+  <span style="width:40px;"></span>
+</div>
+
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
 
 <div class="app">
   <!-- ================= SIDEBAR ================= -->
@@ -364,6 +375,6 @@
 
 <div class="toast" id="toast"></div>
 
-<script type="module" src="js/admin.js?v=4"></script>
+<script type="module" src="js/admin.js?v=5"></script>
 </body>
 </html>
