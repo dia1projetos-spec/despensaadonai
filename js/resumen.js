@@ -1,5 +1,5 @@
-import { db, collection, query, where, orderBy, getDocs, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField, addDoc, increment, Timestamp } from "./firebase-config.js?v=10";
-import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=10";
+import { db, collection, query, where, orderBy, getDocs, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField, addDoc, increment, Timestamp } from "./firebase-config.js?v=11";
+import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=11";
 
 function inicioDeMes() {
   const d = new Date();

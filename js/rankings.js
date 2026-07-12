@@ -1,5 +1,5 @@
-import { onProductosChange } from "./store.js?v=10";
-import { escapeHtml } from "./utils.js?v=10";
+import { onProductosChange } from "./store.js?v=11";
+import { escapeHtml } from "./utils.js?v=11";
 
 export function initRankings() {
   onProductosChange((productos) => {

@@ -1,6 +1,8 @@
-import { db, doc, addDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "./firebase-config.js?v=10";
-import { store, onClientesChange } from "./store.js?v=10";
-import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=10";
+import { db, doc, addDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "./firebase-config.js?v=11";
+import { store, onClientesChange } from "./store.js?v=11";
+import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=11";
+
+let historialCache = []; // última lista cargada, para poder editar/eliminar sin recargar todo
 
 let filtroTexto = "";
 
@@ -103,25 +105,82 @@ export function initClientes() {
   async function abrirHistorial(clienteId, nombre) {
     document.getElementById("modal-historial-titulo").textContent = `Historial de ${nombre}`;
     const body = document.getElementById("historial-cliente-body");
-    body.innerHTML = `<tr><td colspan="4" class="empty-state">Cargando...</td></tr>`;
+    body.innerHTML = `<tr><td colspan="5" class="empty-state">Cargando...</td></tr>`;
     abrirModal("modal-historial");
 
     const q = query(collection(db, "ventas"), where("clienteId", "==", clienteId));
     const snap = await getDocs(q);
     if (snap.empty) {
-      body.innerHTML = `<tr><td colspan="4" class="empty-state">Sin compras registradas</td></tr>`;
+      historialCache = [];
+      body.innerHTML = `<tr><td colspan="5" class="empty-state">Sin compras registradas</td></tr>`;
       return;
     }
     const docsOrdenados = [...snap.docs].sort((a, b) => (b.data().createdAt?.toMillis?.() ?? 0) - (a.data().createdAt?.toMillis?.() ?? 0));
-    body.innerHTML = docsOrdenados.map((d) => {
-      const v = d.data();
+    historialCache = docsOrdenados.map((d) => ({ id: d.id, ...d.data() }));
+    renderHistorial();
+  }
+
+  function renderHistorial() {
+    const body = document.getElementById("historial-cliente-body");
+    if (!historialCache.length) {
+      body.innerHTML = `<tr><td colspan="5" class="empty-state">Sin compras registradas</td></tr>`;
+      return;
+    }
+    body.innerHTML = historialCache.map((v) => {
       const items = v.items.map((i) => `${i.cantidad}x ${i.nombre}`).join(", ");
       return `<tr>
         <td data-label="Fecha">${formatoFecha(v.createdAt)}</td>
         <td data-label="Items">${escapeHtml(items)}</td>
         <td data-label="Total" class="mono">${formatoDinero(v.total)}</td>
         <td data-label="Pago"><span class="pill pill--${v.formaPago}">${v.formaPago}</span></td>
+        <td data-label="">
+          <button class="btn btn-ghost btn-sm" data-editar-venta="${v.id}">Editar</button>
+          <button class="btn btn-danger btn-sm" data-eliminar-venta="${v.id}">Eliminar</button>
+        </td>
       </tr>`;
     }).join("");
   }
+
+  document.getElementById("historial-cliente-body").addEventListener("click", (e) => {
+    const editBtn = e.target.closest("[data-editar-venta]");
+    const delBtn = e.target.closest("[data-eliminar-venta]");
+
+    if (editBtn) {
+      const venta = historialCache.find((v) => v.id === editBtn.dataset.editarVenta);
+      if (!venta) return;
+      document.getElementById("editar-venta-id").value = venta.id;
+      document.getElementById("editar-venta-total").value = venta.total;
+      document.getElementById("editar-venta-forma").value = venta.formaPago;
+      abrirModal("modal-editar-venta");
+    }
+
+    if (delBtn) {
+      if (!confirm("¿Eliminar esta compra del historial? Esta acción no se puede deshacer y no repone el stock automáticamente.")) return;
+      deleteDoc(doc(db, "ventas", delBtn.dataset.eliminarVenta)).then(() => {
+        historialCache = historialCache.filter((v) => v.id !== delBtn.dataset.eliminarVenta);
+        renderHistorial();
+        mostrarToast("Compra eliminada del historial");
+      });
+    }
+  });
+
+  document.getElementById("btn-guardar-venta-editada").addEventListener("click", async () => {
+    const ventaId = document.getElementById("editar-venta-id").value;
+    const total = parseFloat(document.getElementById("editar-venta-total").value);
+    const formaPago = document.getElementById("editar-venta-forma").value;
+
+    if (isNaN(total) || total < 0) { mostrarToast("Ingresá un total válido", true); return; }
+
+    try {
+      await updateDoc(doc(db, "ventas", ventaId), { total, formaPago });
+      const venta = historialCache.find((v) => v.id === ventaId);
+      if (venta) { venta.total = total; venta.formaPago = formaPago; }
+      renderHistorial();
+      cerrarModal("modal-editar-venta");
+      mostrarToast("Compra actualizada");
+    } catch (err) {
+      console.error(err);
+      mostrarToast("Error al actualizar la compra", true);
+    }
+  });
 }

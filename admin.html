@@ -4,8 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Despensa Adonai — Panel</title>
-<link rel="stylesheet" href="css/variables.css?v=10" />
-<link rel="stylesheet" href="css/admin.css?v=10" />
+<link rel="stylesheet" href="css/variables.css?v=11" />
+<link rel="stylesheet" href="css/admin.css?v=11" />
 </head>
 <body>
 
@@ -344,7 +344,7 @@
     <h3 id="modal-historial-titulo">Historial de compras</h3>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Fecha</th><th>Items</th><th>Total</th><th>Pago</th></tr></thead>
+        <thead><tr><th>Fecha</th><th>Items</th><th>Total</th><th>Pago</th><th></th></tr></thead>
         <tbody id="historial-cliente-body"></tbody>
       </table>
     </div>
@@ -378,6 +378,32 @@
   </div>
 </div>
 
+<!-- ============ MODAL: editar venta ============ -->
+<div class="modal-overlay" id="modal-editar-venta">
+  <div class="modal">
+    <h3>Editar compra</h3>
+    <input type="hidden" id="editar-venta-id" />
+    <p style="color: var(--color-ink-soft); font-size: var(--fs-sm); margin-bottom: var(--space-4);">Los productos de la compra no se pueden editar acá — si el error es en el total o la forma de pago, se corrige abajo.</p>
+    <div class="field">
+      <label>Total</label>
+      <input type="number" id="editar-venta-total" min="0" step="0.01" />
+    </div>
+    <div class="field">
+      <label>Forma de pago</label>
+      <select id="editar-venta-forma">
+        <option value="efectivo">Efectivo</option>
+        <option value="transferencia">Transferencia</option>
+        <option value="fiado">Fiado</option>
+        <option value="familiar">Familiar</option>
+      </select>
+    </div>
+    <div class="modal__actions">
+      <button class="btn btn-ghost" data-close-modal>Cancelar</button>
+      <button class="btn btn-primary" id="btn-guardar-venta-editada">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============ MODAL: pago de fiado ============ -->
 <div class="modal-overlay" id="modal-pago-fiado">
   <div class="modal">
@@ -404,6 +430,6 @@
 
 <div class="toast" id="toast"></div>
 
-<script type="module" src="js/admin.js?v=10"></script>
+<script type="module" src="js/admin.js?v=11"></script>
 </body>
 </html>
