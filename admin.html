@@ -4,8 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Despensa Adonai — Panel</title>
-<link rel="stylesheet" href="css/variables.css?v=12" />
-<link rel="stylesheet" href="css/admin.css?v=12" />
+<link rel="stylesheet" href="css/variables.css?v=13" />
+<link rel="stylesheet" href="css/admin.css?v=13" />
 </head>
 <body>
 
@@ -167,6 +167,22 @@
             <button class="btn btn-danger btn-sm no-print" id="btn-borrar-caja">🗑️ Poner en $0</button>
           </div>
         </div>
+        <div class="stat-card">
+          <div class="stat-card__label">Total en efectivo (mes)</div>
+          <div class="stat-card__value small" id="stat-efectivo">$0.00</div>
+          <div style="margin-top:8px; display:flex; gap:6px;">
+            <button class="btn btn-ghost btn-sm no-print" id="btn-editar-efectivo">✏️ Editar</button>
+            <button class="btn btn-danger btn-sm no-print" id="btn-borrar-efectivo">🗑️ Poner en $0</button>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__label">Total en transferencia (mes)</div>
+          <div class="stat-card__value small" id="stat-transferencia">$0.00</div>
+          <div style="margin-top:8px; display:flex; gap:6px;">
+            <button class="btn btn-ghost btn-sm no-print" id="btn-editar-transferencia">✏️ Editar</button>
+            <button class="btn btn-danger btn-sm no-print" id="btn-borrar-transferencia">🗑️ Poner en $0</button>
+          </div>
+        </div>
         <div class="stat-card"><div class="stat-card__label">Retiros del mes</div><div class="stat-card__value small" id="stat-retiros">$0.00</div></div>
         <div class="stat-card"><div class="stat-card__label">Caja disponible</div><div class="stat-card__value small" id="stat-disponible">$0.00</div></div>
         <div class="stat-card stat-card--accent">
@@ -191,11 +207,6 @@
             <tbody id="retiros-body"><tr><td colspan="5" class="empty-state">Sin retiros este mes</td></tr></tbody>
           </table>
         </div>
-      </div>
-
-      <div class="cards-row">
-        <div class="stat-card"><div class="stat-card__label">Total en efectivo (mes)</div><div class="stat-card__value small" id="stat-efectivo">$0.00</div></div>
-        <div class="stat-card"><div class="stat-card__label">Total en transferencia (mes)</div><div class="stat-card__value small" id="stat-transferencia">$0.00</div></div>
       </div>
 
       <div class="panel">
@@ -430,6 +441,6 @@
 
 <div class="toast" id="toast"></div>
 
-<script type="module" src="js/admin.js?v=12"></script>
+<script type="module" src="js/admin.js?v=13"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
-import { db, collection, onSnapshot, orderBy, query } from "./firebase-config.js?v=12";
-import { mostrarToast } from "./utils.js?v=12";
+import { db, collection, onSnapshot, orderBy, query } from "./firebase-config.js?v=13";
+import { mostrarToast } from "./utils.js?v=13";
 
 export const store = {
   productos: [],

@@ -1,6 +1,6 @@
-import { db, doc, addDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "./firebase-config.js?v=12";
-import { store, onClientesChange } from "./store.js?v=12";
-import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=12";
+import { db, doc, addDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "./firebase-config.js?v=13";
+import { store, onClientesChange } from "./store.js?v=13";
+import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=13";
 
 let historialCache = []; // última lista cargada, para poder editar/eliminar sin recargar todo
 

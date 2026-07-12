@@ -1,4 +1,4 @@
-import { CLOUDINARY_CONFIG } from "./firebase-config.js?v=12";
+import { CLOUDINARY_CONFIG } from "./firebase-config.js?v=13";
 
 /**
  * Sube un archivo (imagen o video) a Cloudinary usando el upload preset

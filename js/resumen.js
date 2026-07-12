@@ -1,5 +1,5 @@
-import { db, collection, query, where, orderBy, getDocs, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField, addDoc, increment, Timestamp } from "./firebase-config.js?v=12";
-import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=12";
+import { db, collection, query, where, orderBy, getDocs, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField, addDoc, increment, Timestamp } from "./firebase-config.js?v=13";
+import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=13";
 
 function inicioDeMes() {
   const d = new Date();
@@ -194,6 +194,60 @@ export function initResumen() {
     }
   });
 
+  document.getElementById("btn-editar-efectivo").addEventListener("click", async () => {
+    const actual = calcularTotales().totalEfectivo;
+    const nuevoValor = prompt("Ingresá el nuevo valor de \"Total en efectivo\":", actual);
+    if (nuevoValor === null) return;
+    const monto = parseFloat(nuevoValor);
+    if (isNaN(monto)) { mostrarToast("Ingresá un número válido", true); return; }
+    const diferencia = monto - totalEfectivoCalculadoActual();
+    try {
+      await setDoc(refAjuste, { ajusteEfectivo: diferencia, updatedAt: new Date() }, { merge: true });
+      mostrarToast("Total en efectivo actualizado");
+    } catch (err) {
+      console.error(err);
+      mostrarToast("Error al guardar", true);
+    }
+  });
+
+  document.getElementById("btn-borrar-efectivo").addEventListener("click", async () => {
+    if (!confirm("¿Poner el total en efectivo en $0.00?")) return;
+    try {
+      await setDoc(refAjuste, { ajusteEfectivo: -totalEfectivoCalculadoActual(), updatedAt: new Date() }, { merge: true });
+      mostrarToast("Total en efectivo puesto en $0.00");
+    } catch (err) {
+      console.error(err);
+      mostrarToast("Error al restablecer", true);
+    }
+  });
+
+  document.getElementById("btn-editar-transferencia").addEventListener("click", async () => {
+    const actual = calcularTotales().totalTransferencia;
+    const nuevoValor = prompt("Ingresá el nuevo valor de \"Total en transferencia\":", actual);
+    if (nuevoValor === null) return;
+    const monto = parseFloat(nuevoValor);
+    if (isNaN(monto)) { mostrarToast("Ingresá un número válido", true); return; }
+    const diferencia = monto - totalTransferenciaCalculadoActual();
+    try {
+      await setDoc(refAjuste, { ajusteTransferencia: diferencia, updatedAt: new Date() }, { merge: true });
+      mostrarToast("Total en transferencia actualizado");
+    } catch (err) {
+      console.error(err);
+      mostrarToast("Error al guardar", true);
+    }
+  });
+
+  document.getElementById("btn-borrar-transferencia").addEventListener("click", async () => {
+    if (!confirm("¿Poner el total en transferencia en $0.00?")) return;
+    try {
+      await setDoc(refAjuste, { ajusteTransferencia: -totalTransferenciaCalculadoActual(), updatedAt: new Date() }, { merge: true });
+      mostrarToast("Total en transferencia puesto en $0.00");
+    } catch (err) {
+      console.error(err);
+      mostrarToast("Error al restablecer", true);
+    }
+  });
+
   btnNuevoRetiro.addEventListener("click", () => {
     document.getElementById("retiro-nombre").value = "";
     document.getElementById("retiro-monto").value = "";
@@ -281,27 +335,32 @@ export function initResumen() {
     return totalFamiliar;
   }
 
+  function totalEfectivoCalculadoActual() {
+    let total = 0;
+    ventasDelMes.forEach((v) => { if (!v.esFamiliar && v.formaPago === "efectivo") total += v.total || 0; });
+    pagosFiadoDelMes.forEach((p) => { if (p.formaPago === "efectivo") total += p.monto || 0; });
+    return total;
+  }
+
+  function totalTransferenciaCalculadoActual() {
+    let total = 0;
+    ventasDelMes.forEach((v) => { if (!v.esFamiliar && v.formaPago === "transferencia") total += v.total || 0; });
+    pagosFiadoDelMes.forEach((p) => { if (p.formaPago === "transferencia") total += p.monto || 0; });
+    return total;
+  }
+
   function calcularTotales() {
     const totalFiadoAbierto = fiadosAbiertos.reduce((acc, v) => acc + ((v.total || 0) - (v.montoPagado || 0)), 0);
 
-    // Efectivo y transferencia: suman las ventas normales del mes MÁS lo que se
-    // liquidó de fiado este mes (con la forma de pago que se eligió al liquidar).
-    let totalEfectivo = 0, totalTransferencia = 0;
-    ventasDelMes.forEach((v) => {
-      if (v.esFamiliar || v.formaPago === "fiado") return;
-      if (v.formaPago === "efectivo") totalEfectivo += v.total || 0;
-      if (v.formaPago === "transferencia") totalTransferencia += v.total || 0;
-    });
-    pagosFiadoDelMes.forEach((p) => {
-      if (p.formaPago === "efectivo") totalEfectivo += p.monto || 0;
-      if (p.formaPago === "transferencia") totalTransferencia += p.monto || 0;
-    });
-
     const ajusteCaja = ajusteManual?.ajusteCaja || 0;
     const ajusteFamiliar = ajusteManual?.ajusteFamiliar || 0;
+    const ajusteEfectivo = ajusteManual?.ajusteEfectivo || 0;
+    const ajusteTransferencia = ajusteManual?.ajusteTransferencia || 0;
 
     const totalCaja = totalCajaCalculadoActual() + ajusteCaja;
     const totalFamiliar = totalFamiliarCalculadoActual() + ajusteFamiliar;
+    const totalEfectivo = totalEfectivoCalculadoActual() + ajusteEfectivo;
+    const totalTransferencia = totalTransferenciaCalculadoActual() + ajusteTransferencia;
     const totalRetiros = retirosDelMes.reduce((acc, r) => acc + (r.monto || 0), 0);
     const totalDisponible = totalCaja - totalRetiros;
 
