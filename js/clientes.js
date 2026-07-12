@@ -1,6 +1,7 @@
-import { db, doc, addDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "./firebase-config.js?v=13";
-import { store, onClientesChange } from "./store.js?v=13";
-import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=13";
+import { db, doc, addDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "./firebase-config.js?v=14";
+import { store, onClientesChange } from "./store.js?v=14";
+import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=14";
+import { abrirEditarVenta } from "./ventaEditor.js?v=14";
 
 let historialCache = []; // última lista cargada, para poder editar/eliminar sin recargar todo
 
@@ -148,10 +149,11 @@ export function initClientes() {
     if (editBtn) {
       const venta = historialCache.find((v) => v.id === editBtn.dataset.editarVenta);
       if (!venta) return;
-      document.getElementById("editar-venta-id").value = venta.id;
-      document.getElementById("editar-venta-total").value = venta.total;
-      document.getElementById("editar-venta-forma").value = venta.formaPago;
-      abrirModal("modal-editar-venta");
+      abrirEditarVenta(venta, (ventaId, cambios) => {
+        const v = historialCache.find((x) => x.id === ventaId);
+        if (v) Object.assign(v, cambios);
+        renderHistorial();
+      });
     }
 
     if (delBtn) {
@@ -164,23 +166,4 @@ export function initClientes() {
     }
   });
 
-  document.getElementById("btn-guardar-venta-editada").addEventListener("click", async () => {
-    const ventaId = document.getElementById("editar-venta-id").value;
-    const total = parseFloat(document.getElementById("editar-venta-total").value);
-    const formaPago = document.getElementById("editar-venta-forma").value;
-
-    if (isNaN(total) || total < 0) { mostrarToast("Ingresá un total válido", true); return; }
-
-    try {
-      await updateDoc(doc(db, "ventas", ventaId), { total, formaPago });
-      const venta = historialCache.find((v) => v.id === ventaId);
-      if (venta) { venta.total = total; venta.formaPago = formaPago; }
-      renderHistorial();
-      cerrarModal("modal-editar-venta");
-      mostrarToast("Compra actualizada");
-    } catch (err) {
-      console.error(err);
-      mostrarToast("Error al actualizar la compra", true);
-    }
-  });
 }

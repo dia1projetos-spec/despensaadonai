@@ -1,7 +1,7 @@
-import { db, doc, addDoc, updateDoc, deleteDoc, collection } from "./firebase-config.js?v=13";
-import { subirACloudinary } from "./cloudinary.js?v=13";
-import { store, onProductosChange, precioFinalProducto } from "./store.js?v=13";
-import { formatoDinero, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=13";
+import { db, doc, addDoc, updateDoc, deleteDoc, collection } from "./firebase-config.js?v=14";
+import { subirACloudinary } from "./cloudinary.js?v=14";
+import { store, onProductosChange, precioFinalProducto } from "./store.js?v=14";
+import { formatoDinero, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=14";
 
 let fotoTemp = null;
 let filtroTexto = "";

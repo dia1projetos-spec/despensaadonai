@@ -4,8 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Despensa Adonai — Panel</title>
-<link rel="stylesheet" href="css/variables.css?v=13" />
-<link rel="stylesheet" href="css/admin.css?v=13" />
+<link rel="stylesheet" href="css/variables.css?v=14" />
+<link rel="stylesheet" href="css/admin.css?v=14" />
 </head>
 <body>
 
@@ -30,6 +30,7 @@
 
     <nav>
       <button class="nav-item is-active" data-view="caja">🧾 Caja</button>
+      <button class="nav-item" data-view="ventas">📋 Ventas</button>
       <button class="nav-item" data-view="productos">📦 Productos</button>
       <button class="nav-item" data-view="clientes">👥 Clientes</button>
       <button class="nav-item" data-view="resumen">💰 Resumen</button>
@@ -111,6 +112,25 @@
     </section>
 
     <!-- ---------- PRODUCTOS ---------- -->
+    <!-- ---------- VENTAS ---------- -->
+    <section class="view" data-view="ventas">
+      <div class="topbar">
+        <div><h2>Ventas</h2><p class="topbar__sub">Todas las compras realizadas</p></div>
+      </div>
+
+      <div class="panel">
+        <div class="toolbar">
+          <input type="text" class="search" id="buscar-venta-lista" placeholder="🔎 Buscar por nombre de cliente..." />
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Fecha</th><th>Cliente</th><th>Items</th><th>Total</th><th>Pago</th><th></th></tr></thead>
+            <tbody id="ventas-body"><tr><td colspan="6" class="empty-state">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <section class="view" data-view="productos">
       <div class="topbar">
         <div><h2>Productos</h2><p class="topbar__sub">Stock, precios e IVA por producto</p></div>
@@ -441,6 +461,6 @@
 
 <div class="toast" id="toast"></div>
 
-<script type="module" src="js/admin.js?v=13"></script>
+<script type="module" src="js/admin.js?v=14"></script>
 </body>
 </html>

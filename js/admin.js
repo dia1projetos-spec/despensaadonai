@@ -1,13 +1,15 @@
-import { auth, db, onAuthStateChanged, signOut, collection, query, where, getDocs, deleteDoc, Timestamp } from "./firebase-config.js?v=13";
-import { iniciarStore } from "./store.js?v=13";
-import { inicializarModales } from "./utils.js?v=13";
-import { initProductos } from "./productos.js?v=13";
-import { initClientes } from "./clientes.js?v=13";
-import { initCaja } from "./caja.js?v=13";
-import { initResumen } from "./resumen.js?v=13";
-import { initRankings } from "./rankings.js?v=13";
-import { initNotificaciones } from "./notificaciones.js?v=13";
-import { initConfig } from "./config.js?v=13";
+import { auth, db, onAuthStateChanged, signOut, collection, query, where, getDocs, deleteDoc, Timestamp } from "./firebase-config.js?v=14";
+import { iniciarStore } from "./store.js?v=14";
+import { inicializarModales } from "./utils.js?v=14";
+import { initProductos } from "./productos.js?v=14";
+import { initClientes } from "./clientes.js?v=14";
+import { initCaja } from "./caja.js?v=14";
+import { initResumen } from "./resumen.js?v=14";
+import { initRankings } from "./rankings.js?v=14";
+import { initNotificaciones } from "./notificaciones.js?v=14";
+import { initConfig } from "./config.js?v=14";
+import { initVentas } from "./ventas.js?v=14";
+import { initVentaEditor } from "./ventaEditor.js?v=14";
 
 // ---------- Guarda de sesión ----------
 onAuthStateChanged(auth, (user) => {
@@ -25,9 +27,11 @@ function iniciarApp() {
 
   iniciarStore();
   inicializarModales();
+  initVentaEditor();
   initProductos();
   initClientes();
   initCaja();
+  initVentas();
   initResumen();
   initRankings();
   initNotificaciones();
