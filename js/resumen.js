@@ -1,5 +1,5 @@
-import { db, collection, query, where, orderBy, getDocs, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField, addDoc, increment, Timestamp } from "./firebase-config.js?v=11";
-import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=11";
+import { db, collection, query, where, orderBy, getDocs, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField, addDoc, increment, Timestamp } from "./firebase-config.js?v=12";
+import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=12";
 
 function inicioDeMes() {
   const d = new Date();
@@ -283,8 +283,19 @@ export function initResumen() {
 
   function calcularTotales() {
     const totalFiadoAbierto = fiadosAbiertos.reduce((acc, v) => acc + ((v.total || 0) - (v.montoPagado || 0)), 0);
-    const liquidadoEfectivo = pagosFiadoDelMes.filter((p) => p.formaPago === "efectivo").reduce((acc, p) => acc + (p.monto || 0), 0);
-    const liquidadoTransferencia = pagosFiadoDelMes.filter((p) => p.formaPago === "transferencia").reduce((acc, p) => acc + (p.monto || 0), 0);
+
+    // Efectivo y transferencia: suman las ventas normales del mes MÁS lo que se
+    // liquidó de fiado este mes (con la forma de pago que se eligió al liquidar).
+    let totalEfectivo = 0, totalTransferencia = 0;
+    ventasDelMes.forEach((v) => {
+      if (v.esFamiliar || v.formaPago === "fiado") return;
+      if (v.formaPago === "efectivo") totalEfectivo += v.total || 0;
+      if (v.formaPago === "transferencia") totalTransferencia += v.total || 0;
+    });
+    pagosFiadoDelMes.forEach((p) => {
+      if (p.formaPago === "efectivo") totalEfectivo += p.monto || 0;
+      if (p.formaPago === "transferencia") totalTransferencia += p.monto || 0;
+    });
 
     const ajusteCaja = ajusteManual?.ajusteCaja || 0;
     const ajusteFamiliar = ajusteManual?.ajusteFamiliar || 0;
@@ -294,18 +305,18 @@ export function initResumen() {
     const totalRetiros = retirosDelMes.reduce((acc, r) => acc + (r.monto || 0), 0);
     const totalDisponible = totalCaja - totalRetiros;
 
-    return { totalCaja, totalFamiliar, totalFiadoAbierto, totalRetiros, totalDisponible, liquidadoEfectivo, liquidadoTransferencia };
+    return { totalCaja, totalFamiliar, totalFiadoAbierto, totalRetiros, totalDisponible, totalEfectivo, totalTransferencia };
   }
 
   function renderResumen() {
-    const { totalCaja, totalFamiliar, totalFiadoAbierto, totalRetiros, totalDisponible, liquidadoEfectivo, liquidadoTransferencia } = calcularTotales();
+    const { totalCaja, totalFamiliar, totalFiadoAbierto, totalRetiros, totalDisponible, totalEfectivo, totalTransferencia } = calcularTotales();
     document.getElementById("stat-caja").textContent = formatoDinero(totalCaja);
     document.getElementById("stat-retiros").textContent = formatoDinero(totalRetiros);
     document.getElementById("stat-disponible").textContent = formatoDinero(totalDisponible);
     document.getElementById("stat-familiar").textContent = formatoDinero(totalFamiliar);
     document.getElementById("stat-fiado").textContent = formatoDinero(totalFiadoAbierto);
-    document.getElementById("stat-fiado-efectivo").textContent = formatoDinero(liquidadoEfectivo);
-    document.getElementById("stat-fiado-transferencia").textContent = formatoDinero(liquidadoTransferencia);
+    document.getElementById("stat-efectivo").textContent = formatoDinero(totalEfectivo);
+    document.getElementById("stat-transferencia").textContent = formatoDinero(totalTransferencia);
 
     if (!fiadosAbiertos.length) {
       fiadoBody.innerHTML = `<tr><td colspan="6" class="empty-state">No hay fiados abiertos 🎉</td></tr>`;
