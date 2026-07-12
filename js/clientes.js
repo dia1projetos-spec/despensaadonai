@@ -1,6 +1,6 @@
-import { db, doc, addDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "./firebase-config.js?v=9";
-import { store, onClientesChange } from "./store.js?v=9";
-import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=9";
+import { db, doc, addDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "./firebase-config.js?v=10";
+import { store, onClientesChange } from "./store.js?v=10";
+import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=10";
 
 let filtroTexto = "";
 

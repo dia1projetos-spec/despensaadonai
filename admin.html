@@ -4,8 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Despensa Adonai — Panel</title>
-<link rel="stylesheet" href="css/variables.css?v=9" />
-<link rel="stylesheet" href="css/admin.css?v=9" />
+<link rel="stylesheet" href="css/variables.css?v=10" />
+<link rel="stylesheet" href="css/admin.css?v=10" />
 </head>
 <body>
 
@@ -193,13 +193,18 @@
         </div>
       </div>
 
+      <div class="cards-row">
+        <div class="stat-card"><div class="stat-card__label">Fiado liquidado en efectivo (mes)</div><div class="stat-card__value small" id="stat-fiado-efectivo">$0.00</div></div>
+        <div class="stat-card"><div class="stat-card__label">Fiado liquidado por transferencia (mes)</div><div class="stat-card__value small" id="stat-fiado-transferencia">$0.00</div></div>
+      </div>
+
       <div class="panel">
         <div class="toolbar no-print">
-          <h3 style="font-family: var(--font-display); font-size: var(--fs-lg);">Ventas fiadas pendientes</h3>
+          <h3 style="font-family: var(--font-display); font-size: var(--fs-lg);">Fiados abiertos (todos los clientes)</h3>
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Fecha</th><th>Cliente</th><th>Total</th><th></th></tr></thead>
+            <thead><tr><th>Fecha</th><th>Cliente</th><th>Total</th><th>Pagado</th><th>Saldo</th><th></th></tr></thead>
             <tbody id="fiado-body"></tbody>
           </table>
         </div>
@@ -373,8 +378,32 @@
   </div>
 </div>
 
+<!-- ============ MODAL: pago de fiado ============ -->
+<div class="modal-overlay" id="modal-pago-fiado">
+  <div class="modal">
+    <h3>Registrar pago de fiado</h3>
+    <p id="pago-fiado-info" style="color: var(--color-ink-soft); font-size: var(--fs-sm); margin-bottom: var(--space-4);"></p>
+    <input type="hidden" id="pago-fiado-venta-id" />
+    <div class="field">
+      <label>Monto liquidado</label>
+      <input type="number" id="pago-fiado-monto" min="0" step="0.01" placeholder="0.00" />
+    </div>
+    <div class="field">
+      <label>Forma de pago</label>
+      <select id="pago-fiado-forma">
+        <option value="efectivo">Efectivo</option>
+        <option value="transferencia">Transferencia</option>
+      </select>
+    </div>
+    <div class="modal__actions">
+      <button class="btn btn-ghost" data-close-modal>Cancelar</button>
+      <button class="btn btn-primary" id="btn-guardar-pago-fiado">Registrar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
-<script type="module" src="js/admin.js?v=9"></script>
+<script type="module" src="js/admin.js?v=10"></script>
 </body>
 </html>

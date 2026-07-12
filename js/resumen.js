@@ -1,5 +1,5 @@
-import { db, collection, query, where, orderBy, getDocs, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField, addDoc, Timestamp } from "./firebase-config.js?v=9";
-import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=9";
+import { db, collection, query, where, orderBy, getDocs, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField, addDoc, increment, Timestamp } from "./firebase-config.js?v=10";
+import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=10";
 
 function inicioDeMes() {
   const d = new Date();
@@ -9,6 +9,8 @@ function inicioDeMes() {
 let ventasDelMes = [];
 let retirosDelMes = [];
 let ajusteManual = null;
+let fiadosAbiertos = [];
+let pagosFiadoDelMes = [];
 
 function claveDelMes() {
   return new Date().toISOString().slice(0, 7); // YYYY-MM
@@ -62,6 +64,78 @@ export function initResumen() {
     renderResumen();
   }, (err) => {
     console.error("Error cargando el total de caja editado:", err);
+  });
+
+  // Fiados abiertos: TODOS los que tengan saldo pendiente, sin importar el mes en que se vendieron.
+  const qFiadosAbiertos = query(collection(db, "ventas"), where("formaPago", "==", "fiado"));
+  onSnapshot(qFiadosAbiertos, (snap) => {
+    fiadosAbiertos = snap.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .filter((v) => (v.total || 0) - (v.montoPagado || 0) > 0.009)
+      .sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
+    renderResumen();
+  }, (err) => {
+    console.error("Error cargando fiados abiertos:", err);
+    mostrarToast("No se pudieron cargar los fiados: " + err.message, true);
+  });
+
+  // Pagos de fiado liquidados ESTE MES (para sumar al caja y discriminar efectivo/transferencia).
+  const qPagosFiado = query(collection(db, "pagosFiado"), where("createdAt", ">=", Timestamp.fromDate(inicioDeMes())));
+  onSnapshot(qPagosFiado, (snap) => {
+    pagosFiadoDelMes = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    renderResumen();
+  }, (err) => {
+    console.error("Error cargando pagos de fiado:", err);
+  });
+
+  document.getElementById("fiado-body").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-pagar-fiado]");
+    if (!btn) return;
+    const venta = fiadosAbiertos.find((v) => v.id === btn.dataset.pagarFiado);
+    if (!venta) return;
+    const saldo = (venta.total || 0) - (venta.montoPagado || 0);
+    document.getElementById("pago-fiado-venta-id").value = venta.id;
+    document.getElementById("pago-fiado-info").textContent = `${venta.clienteNombre} — saldo pendiente: ${formatoDinero(saldo)}`;
+    document.getElementById("pago-fiado-monto").value = "";
+    document.getElementById("pago-fiado-monto").max = saldo;
+    document.getElementById("pago-fiado-forma").value = "efectivo";
+    abrirModal("modal-pago-fiado");
+  });
+
+  document.getElementById("btn-guardar-pago-fiado").addEventListener("click", async () => {
+    const ventaId = document.getElementById("pago-fiado-venta-id").value;
+    const monto = parseFloat(document.getElementById("pago-fiado-monto").value);
+    const formaPago = document.getElementById("pago-fiado-forma").value;
+    const venta = fiadosAbiertos.find((v) => v.id === ventaId);
+    if (!venta) return;
+    const saldo = (venta.total || 0) - (venta.montoPagado || 0);
+
+    if (!monto || monto <= 0) { mostrarToast("Ingresá un monto válido", true); return; }
+    if (monto > saldo + 0.01) { mostrarToast(`El monto no puede ser mayor al saldo pendiente (${formatoDinero(saldo)})`, true); return; }
+
+    const btn = document.getElementById("btn-guardar-pago-fiado");
+    btn.disabled = true;
+    try {
+      await addDoc(collection(db, "pagosFiado"), {
+        ventaId,
+        clienteId: venta.clienteId || null,
+        clienteNombre: venta.clienteNombre,
+        monto,
+        formaPago,
+        createdAt: new Date(),
+      });
+      await updateDoc(doc(db, "ventas", ventaId), {
+        montoPagado: increment(monto),
+        pagado: monto + (venta.montoPagado || 0) >= (venta.total || 0) - 0.01,
+      });
+      mostrarToast("Pago registrado");
+      cerrarModal("modal-pago-fiado");
+    } catch (err) {
+      console.error(err);
+      mostrarToast("Error al registrar el pago", true);
+    } finally {
+      btn.disabled = false;
+    }
   });
 
   document.getElementById("btn-editar-caja").addEventListener("click", async () => {
@@ -171,14 +245,6 @@ export function initResumen() {
     }
   });
 
-  fiadoBody.addEventListener("click", async (e) => {
-    const btn = e.target.closest("[data-pagar]");
-    if (!btn) return;
-    if (!confirm("¿Marcar esta venta fiada como pagada?")) return;
-    await updateDoc(doc(db, "ventas", btn.dataset.pagar), { pagado: true, pagadoAt: new Date() });
-    mostrarToast("Venta marcada como pagada");
-  });
-
   retirosBody.addEventListener("click", async (e) => {
     const btn = e.target.closest("[data-del-retiro]");
     if (!btn) return;
@@ -198,11 +264,14 @@ export function initResumen() {
 
   function totalCajaCalculadoActual() {
     let totalCajaCalculado = 0;
+    // Ventas normales (efectivo/transferencia) del mes — el fiado NO entra acá directamente.
     ventasDelMes.forEach((v) => {
       if (v.esFamiliar) return;
-      if (v.formaPago === "fiado" && !v.pagado) return;
+      if (v.formaPago === "fiado") return; // el fiado solo suma cuando se liquida (ver abajo)
       totalCajaCalculado += v.total || 0;
     });
+    // Pagos de fiado liquidados este mes (en efectivo o transferencia) SÍ suman al caja.
+    pagosFiadoDelMes.forEach((p) => { totalCajaCalculado += p.monto || 0; });
     return totalCajaCalculado;
   }
 
@@ -213,15 +282,9 @@ export function initResumen() {
   }
 
   function calcularTotales() {
-    let totalFiadoAbierto = 0;
-    const fiadosPendientes = [];
-
-    ventasDelMes.forEach((v) => {
-      if (!v.esFamiliar && v.formaPago === "fiado" && !v.pagado) {
-        totalFiadoAbierto += v.total || 0;
-        fiadosPendientes.push(v);
-      }
-    });
+    const totalFiadoAbierto = fiadosAbiertos.reduce((acc, v) => acc + ((v.total || 0) - (v.montoPagado || 0)), 0);
+    const liquidadoEfectivo = pagosFiadoDelMes.filter((p) => p.formaPago === "efectivo").reduce((acc, p) => acc + (p.monto || 0), 0);
+    const liquidadoTransferencia = pagosFiadoDelMes.filter((p) => p.formaPago === "transferencia").reduce((acc, p) => acc + (p.monto || 0), 0);
 
     const ajusteCaja = ajusteManual?.ajusteCaja || 0;
     const ajusteFamiliar = ajusteManual?.ajusteFamiliar || 0;
@@ -231,27 +294,34 @@ export function initResumen() {
     const totalRetiros = retirosDelMes.reduce((acc, r) => acc + (r.monto || 0), 0);
     const totalDisponible = totalCaja - totalRetiros;
 
-    return { totalCaja, totalFamiliar, totalFiadoAbierto, totalRetiros, totalDisponible, fiadosPendientes };
+    return { totalCaja, totalFamiliar, totalFiadoAbierto, totalRetiros, totalDisponible, liquidadoEfectivo, liquidadoTransferencia };
   }
 
   function renderResumen() {
-    const { totalCaja, totalFamiliar, totalFiadoAbierto, totalRetiros, totalDisponible, fiadosPendientes } = calcularTotales();
+    const { totalCaja, totalFamiliar, totalFiadoAbierto, totalRetiros, totalDisponible, liquidadoEfectivo, liquidadoTransferencia } = calcularTotales();
     document.getElementById("stat-caja").textContent = formatoDinero(totalCaja);
     document.getElementById("stat-retiros").textContent = formatoDinero(totalRetiros);
     document.getElementById("stat-disponible").textContent = formatoDinero(totalDisponible);
     document.getElementById("stat-familiar").textContent = formatoDinero(totalFamiliar);
     document.getElementById("stat-fiado").textContent = formatoDinero(totalFiadoAbierto);
+    document.getElementById("stat-fiado-efectivo").textContent = formatoDinero(liquidadoEfectivo);
+    document.getElementById("stat-fiado-transferencia").textContent = formatoDinero(liquidadoTransferencia);
 
-    if (!fiadosPendientes.length) {
-      fiadoBody.innerHTML = `<tr><td colspan="4" class="empty-state">No hay fiados pendientes 🎉</td></tr>`;
+    if (!fiadosAbiertos.length) {
+      fiadoBody.innerHTML = `<tr><td colspan="6" class="empty-state">No hay fiados abiertos 🎉</td></tr>`;
     } else {
-      fiadoBody.innerHTML = fiadosPendientes.map((v) => `
+      fiadoBody.innerHTML = fiadosAbiertos.map((v) => {
+        const saldo = (v.total || 0) - (v.montoPagado || 0);
+        return `
         <tr>
           <td data-label="Fecha">${formatoFecha(v.createdAt)}</td>
           <td data-label="Cliente">${escapeHtml(v.clienteNombre)}</td>
           <td data-label="Total" class="mono">${formatoDinero(v.total)}</td>
-          <td data-label=""><button class="btn btn-accent btn-sm" data-pagar="${v.id}">Marcar pagado</button></td>
-        </tr>`).join("");
+          <td data-label="Pagado" class="mono">${formatoDinero(v.montoPagado || 0)}</td>
+          <td data-label="Saldo" class="mono">${formatoDinero(saldo)}</td>
+          <td data-label=""><button class="btn btn-accent btn-sm" data-pagar-fiado="${v.id}">Registrar pago</button></td>
+        </tr>`;
+      }).join("");
     }
 
     if (!retirosDelMes.length) {
