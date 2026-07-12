@@ -1,5 +1,5 @@
-import { db, collection, query, where, orderBy, getDocs, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField, addDoc, Timestamp } from "./firebase-config.js?v=8";
-import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=8";
+import { db, collection, query, where, orderBy, getDocs, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField, addDoc, Timestamp } from "./firebase-config.js?v=9";
+import { formatoDinero, formatoFecha, mostrarToast, abrirModal, cerrarModal, escapeHtml } from "./utils.js?v=9";
 
 function inicioDeMes() {
   const d = new Date();
@@ -65,13 +65,16 @@ export function initResumen() {
   });
 
   document.getElementById("btn-editar-caja").addEventListener("click", async () => {
-    const actual = ajusteManual ? ajusteManual.totalOverride : calcularTotales().totalCaja;
+    const actual = calcularTotales().totalCaja;
     const nuevoValor = prompt("Ingresá el nuevo valor de \"Total en caja\":", actual);
     if (nuevoValor === null) return; // canceló
     const monto = parseFloat(nuevoValor);
     if (isNaN(monto)) { mostrarToast("Ingresá un número válido", true); return; }
+    // Guardamos la DIFERENCIA entre lo que pediste y lo calculado por las ventas,
+    // así las ventas nuevas se siguen sumando por arriba de tu ajuste.
+    const diferencia = monto - totalCajaCalculadoActual();
     try {
-      await setDoc(refAjuste, { totalOverride: monto, updatedAt: new Date() }, { merge: true });
+      await setDoc(refAjuste, { ajusteCaja: diferencia, updatedAt: new Date() }, { merge: true });
       mostrarToast("Total en caja actualizado");
     } catch (err) {
       console.error(err);
@@ -82,7 +85,7 @@ export function initResumen() {
   document.getElementById("btn-borrar-caja").addEventListener("click", async () => {
     if (!confirm("¿Poner el total en caja en $0.00?")) return;
     try {
-      await setDoc(refAjuste, { totalOverride: 0, updatedAt: new Date() }, { merge: true });
+      await setDoc(refAjuste, { ajusteCaja: -totalCajaCalculadoActual(), updatedAt: new Date() }, { merge: true });
       mostrarToast("Total en caja puesto en $0.00");
     } catch (err) {
       console.error(err);
@@ -91,13 +94,14 @@ export function initResumen() {
   });
 
   document.getElementById("btn-editar-familiar").addEventListener("click", async () => {
-    const actual = ajusteManual && ajusteManual.familiarOverride != null ? ajusteManual.familiarOverride : calcularTotales().totalFamiliar;
+    const actual = calcularTotales().totalFamiliar;
     const nuevoValor = prompt("Ingresá el nuevo valor de \"Retiro familiar\":", actual);
     if (nuevoValor === null) return;
     const monto = parseFloat(nuevoValor);
     if (isNaN(monto)) { mostrarToast("Ingresá un número válido", true); return; }
+    const diferencia = monto - totalFamiliarCalculadoActual();
     try {
-      await setDoc(refAjuste, { familiarOverride: monto, updatedAt: new Date() }, { merge: true });
+      await setDoc(refAjuste, { ajusteFamiliar: diferencia, updatedAt: new Date() }, { merge: true });
       mostrarToast("Retiro familiar actualizado");
     } catch (err) {
       console.error(err);
@@ -108,7 +112,7 @@ export function initResumen() {
   document.getElementById("btn-borrar-familiar").addEventListener("click", async () => {
     if (!confirm("¿Poner el retiro familiar en $0.00?")) return;
     try {
-      await setDoc(refAjuste, { familiarOverride: 0, updatedAt: new Date() }, { merge: true });
+      await setDoc(refAjuste, { ajusteFamiliar: -totalFamiliarCalculadoActual(), updatedAt: new Date() }, { merge: true });
       mostrarToast("Retiro familiar puesto en $0.00");
     } catch (err) {
       console.error(err);
@@ -192,31 +196,42 @@ export function initResumen() {
     cargarHistorialesMensuales();
   });
 
+  function totalCajaCalculadoActual() {
+    let totalCajaCalculado = 0;
+    ventasDelMes.forEach((v) => {
+      if (v.esFamiliar) return;
+      if (v.formaPago === "fiado" && !v.pagado) return;
+      totalCajaCalculado += v.total || 0;
+    });
+    return totalCajaCalculado;
+  }
+
+  function totalFamiliarCalculadoActual() {
+    let totalFamiliar = 0;
+    ventasDelMes.forEach((v) => { if (v.esFamiliar) totalFamiliar += v.valorReal || v.total || 0; });
+    return totalFamiliar;
+  }
+
   function calcularTotales() {
-    let totalCajaCalculado = 0, totalFamiliar = 0, totalFiadoAbierto = 0;
+    let totalFiadoAbierto = 0;
     const fiadosPendientes = [];
 
     ventasDelMes.forEach((v) => {
-      if (v.esFamiliar) {
-        totalFamiliar += v.valorReal || v.total || 0;
-      } else if (v.formaPago === "fiado") {
-        if (!v.pagado) {
-          totalFiadoAbierto += v.total || 0;
-          fiadosPendientes.push(v);
-        } else {
-          totalCajaCalculado += v.total || 0;
-        }
-      } else {
-        totalCajaCalculado += v.total || 0;
+      if (!v.esFamiliar && v.formaPago === "fiado" && !v.pagado) {
+        totalFiadoAbierto += v.total || 0;
+        fiadosPendientes.push(v);
       }
     });
 
-    const totalCaja = ajusteManual && ajusteManual.totalOverride != null ? ajusteManual.totalOverride : totalCajaCalculado;
-    const totalFamiliarFinal = ajusteManual && ajusteManual.familiarOverride != null ? ajusteManual.familiarOverride : totalFamiliar;
+    const ajusteCaja = ajusteManual?.ajusteCaja || 0;
+    const ajusteFamiliar = ajusteManual?.ajusteFamiliar || 0;
+
+    const totalCaja = totalCajaCalculadoActual() + ajusteCaja;
+    const totalFamiliar = totalFamiliarCalculadoActual() + ajusteFamiliar;
     const totalRetiros = retirosDelMes.reduce((acc, r) => acc + (r.monto || 0), 0);
     const totalDisponible = totalCaja - totalRetiros;
 
-    return { totalCaja, totalFamiliar: totalFamiliarFinal, totalFiadoAbierto, totalRetiros, totalDisponible, fiadosPendientes };
+    return { totalCaja, totalFamiliar, totalFiadoAbierto, totalRetiros, totalDisponible, fiadosPendientes };
   }
 
   function renderResumen() {
